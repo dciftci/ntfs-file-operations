@@ -247,6 +247,7 @@ function showDetails(id) {
 
   elEmpty.style.display = "none";
   elDetails.style.display = "block";
+  elDetails.classList.add("active");
 
   elTitle.textContent = op.name;
   elDesc.textContent = op.desc;
