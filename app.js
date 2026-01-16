@@ -185,7 +185,7 @@ const OPS = [
 ];
 
 const elOpList = document.getElementById("opList");
-const elSearch = document.getElementById("search");
+const elSearch = document.getElementById("searchBox");
 
 const elEmpty = document.getElementById("emptyState");
 const elDetails = document.getElementById("details");
@@ -215,17 +215,19 @@ function renderList(filter = "") {
   );
 
   items.forEach(op => {
-    const btn = document.createElement("button");
-    btn.className = "op-btn" + (op.id === activeId ? " active" : "");
-    btn.innerHTML = `
-      <div class="op-top">
-        <div class="op-name">${op.name}</div>
-        <div class="op-tag">${op.tag}</div>
-      </div>
-      <div class="op-mini">${op.desc}</div>
+    const li = document.createElement("li");
+    li.className = "op-item" + (op.id === activeId ? " active" : "");
+    li.innerHTML = `
+      <article class="box post-excerpt">
+        <div class="op-header">
+          <div class="op-name">${op.name}</div>
+          <div class="op-tag">${op.tag}</div>
+        </div>
+        <div class="op-desc">${op.desc}</div>
+      </article>
     `;
-    btn.onclick = () => showDetails(op.id);
-    elOpList.appendChild(btn);
+    li.onclick = () => showDetails(op.id);
+    elOpList.appendChild(li);
   });
 }
 
@@ -245,8 +247,8 @@ function showDetails(id) {
   activeId = id;
   renderList(elSearch.value);
 
-  elEmpty.classList.add("hidden");
-  elDetails.classList.remove("hidden");
+  elEmpty.style.display = "none";
+  elDetails.style.display = "block";
 
   elTitle.textContent = op.name;
   elDesc.textContent = op.desc;
@@ -263,8 +265,8 @@ function showDetails(id) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelector('.tab[data-tab="mft"]').classList.add("active");
 
-  Object.keys(panels).forEach(k => panels[k].classList.add("hidden"));
-  panels.mft.classList.remove("hidden");
+  Object.keys(panels).forEach(k => panels[k].classList.remove("active"));
+  panels.mft.classList.add("active");
 }
 
 function setupTabs() {
@@ -273,13 +275,23 @@ function setupTabs() {
       const tab = btn.dataset.tab;
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       btn.classList.add("active");
-      Object.keys(panels).forEach(k => panels[k].classList.add("hidden"));
-      panels[tab].classList.remove("hidden");
+      Object.keys(panels).forEach(k => panels[k].classList.remove("active"));
+      if (panels[tab]) panels[tab].classList.add("active");
     });
   });
 }
 
-elSearch.addEventListener("input", () => renderList(elSearch.value));
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    setupTabs();
+    renderList();
+  });
+} else {
+  setupTabs();
+  renderList();
+}
 
-setupTabs();
-renderList();
+if (elSearch) {
+  elSearch.addEventListener("input", () => renderList(elSearch.value));
+}

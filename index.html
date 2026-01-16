@@ -1,62 +1,242 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NTFS Artifacts Guide — $MFT / $J / $LogFile</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">NTFS</div>
-      <div>
-        <div class="title">$MFT • $J (USN) • $LogFile</div>
-        <div class="subtitle">Interactive guide for file/folder operations</div>
-      </div>
-    </div>
-    <input id="search" class="search" placeholder="Search operations (e.g., overwrite, rename, delete)..." />
-  </header>
+<!DOCTYPE HTML>
+<!--
+	NTFS File Operations - $MFT / $J / $LogFile
+	Interactive reference tool for understanding file operations
+-->
+<html>
+	<head>
+		<title>NTFS File Operations — $MFT / $J / $LogFile</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<style>
+			/* Custom styles for NTFS Guide */
+			#opList {
+				list-style: none;
+				padding: 0;
+				margin: 1rem 0;
+			}
+			.op-item {
+				margin: 0.5rem 0;
+				cursor: pointer;
+				transition: background-color 0.3s;
+			}
+			.op-item:hover {
+				background-color: rgba(255,255,255,0.05);
+			}
+			.op-item.active {
+				background-color: rgba(255,255,255,0.1);
+				border-left: 3px solid #e74c3c;
+				padding-left: 1rem;
+			}
+			.op-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 0.5rem;
+			}
+			.op-name {
+				font-weight: bold;
+			}
+			.op-tag {
+				font-size: 0.75rem;
+				padding: 0.2rem 0.5rem;
+				background: rgba(255,255,255,0.1);
+				border-radius: 3px;
+			}
+			.op-desc {
+				font-size: 0.9rem;
+				color: rgba(255,255,255,0.7);
+			}
+			#searchBox {
+				width: 100%;
+				padding: 0.75rem;
+				margin-bottom: 1rem;
+				border: 1px solid rgba(255,255,255,0.1);
+				background: rgba(0,0,0,0.3);
+				color: #fff;
+				border-radius: 4px;
+			}
+			#searchBox::placeholder {
+				color: rgba(255,255,255,0.5);
+			}
+			.tabs {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin-bottom: 1.5rem;
+				border-bottom: 2px solid rgba(255,255,255,0.1);
+				padding-bottom: 1rem;
+			}
+			.tab {
+				padding: 0.5rem 1rem;
+				background: rgba(255,255,255,0.05);
+				border: 1px solid rgba(255,255,255,0.1);
+				color: #fff;
+				cursor: pointer;
+				transition: all 0.3s;
+				border-radius: 4px;
+			}
+			.tab:hover {
+				background: rgba(255,255,255,0.1);
+			}
+			.tab.active {
+				background: #e74c3c;
+				border-color: #e74c3c;
+			}
+			.panel {
+				display: none;
+			}
+			.panel.active {
+				display: block;
+			}
+			.chips {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin: 1rem 0;
+			}
+			.chip {
+				padding: 0.3rem 0.75rem;
+				background: rgba(255,255,255,0.1);
+				border-radius: 15px;
+				font-size: 0.85rem;
+			}
+			.empty-state {
+				text-align: center;
+				padding: 3rem 1rem;
+				color: rgba(255,255,255,0.6);
+			}
+			.panel h3 {
+				color: #e74c3c;
+				margin-top: 1.5rem;
+				margin-bottom: 0.75rem;
+			}
+			.panel ul {
+				margin-left: 1.5rem;
+			}
+			.panel li {
+				margin: 0.5rem 0;
+				line-height: 1.6;
+			}
+		</style>
+	</head>
+	<body class="left-sidebar is-preload">
+		<div id="page-wrapper">
 
-  <main class="layout">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="section-title">Operations</div>
-        <div class="hint">Click an operation to view artifact signals</div>
-      </div>
-      <div id="opList" class="op-list"></div>
-    </aside>
+			<!-- Header -->
+				<section id="header" class="wrapper">
 
-    <section class="content">
-      <div id="emptyState" class="empty">
-        <h2>Pick an operation</h2>
-        <p>Example: <b>Create File</b> → see how it appears in <b>$MFT</b>, <b>$J</b>, and <b>$LogFile</b>.</p>
-      </div>
+					<!-- Logo -->
+						<div id="logo">
+							<h1><a href="index.html">NTFS File Operations</a></h1>
+							<p>$MFT • $J (USN) • $LogFile Interactive Reference</p>
+						</div>
 
-      <div id="details" class="details hidden">
-        <div class="details-header">
-          <h1 id="opTitle"></h1>
-          <p id="opDesc" class="muted"></p>
-          <div class="chips" id="opChips"></div>
-        </div>
+					<!-- Nav -->
+						<nav id="nav">
+							<ul>
+								<li class="current"><a href="index.html">Home</a></li>
+							</ul>
+						</nav>
 
-        <div class="tabs">
-          <button class="tab active" data-tab="mft">$MFT</button>
-          <button class="tab" data-tab="usn">$J (USN)</button>
-          <button class="tab" data-tab="log">$LogFile</button>
-          <button class="tab" data-tab="api">File Method / API</button>
-          <button class="tab" data-tab="pitfalls">Pitfalls</button>
-        </div>
+				</section>
 
-        <div class="panel" id="panel-mft"></div>
-        <div class="panel hidden" id="panel-usn"></div>
-        <div class="panel hidden" id="panel-log"></div>
-        <div class="panel hidden" id="panel-api"></div>
-        <div class="panel hidden" id="panel-pitfalls"></div>
-      </div>
-    </section>
-  </main>
+			<!-- Main -->
+				<section id="main" class="wrapper style2">
+					<div class="title">File & Folder Operations</div>
+					<div class="container">
+						<div class="row gtr-150">
+							<div class="col-4 col-12-medium">
 
-  <script src="app.js"></script>
-</body>
+								<!-- Sidebar -->
+									<div id="sidebar">
+										<section class="box">
+											<header>
+												<h2>Operations</h2>
+											</header>
+											<input type="text" id="searchBox" placeholder="Search operations..." />
+											<ul id="opList" class="style2"></ul>
+										</section>
+										<section class="box">
+											<header>
+												<h2>About</h2>
+											</header>
+											<p>This interactive guide shows how file operations appear in NTFS artifacts: <strong>$MFT</strong>, <strong>$J (USN Journal)</strong>, and <strong>$LogFile</strong>.</p>
+											<p>Click an operation to view detailed artifact signals, API patterns, and common pitfalls.</p>
+										</section>
+									</div>
+
+							</div>
+							<div class="col-8 col-12-medium imp-medium">
+
+								<!-- Content -->
+									<div id="content">
+										<article class="box post">
+											<div id="emptyState" class="empty-state">
+												<h2>Select an Operation</h2>
+												<p>Choose a file operation from the sidebar to see how it appears in <strong>$MFT</strong>, <strong>$J</strong>, and <strong>$LogFile</strong>.</p>
+												<p><em>Example: Click "Create File" to view artifact details</em></p>
+											</div>
+
+											<div id="details" style="display: none;">
+												<header class="style1">
+													<h2 id="opTitle"></h2>
+													<p id="opDesc" style="margin-top: 1rem;"></p>
+													<div id="opChips" class="chips"></div>
+												</header>
+
+												<div class="tabs">
+													<button class="tab active" data-tab="mft">$MFT</button>
+													<button class="tab" data-tab="usn">$J (USN)</button>
+													<button class="tab" data-tab="log">$LogFile</button>
+													<button class="tab" data-tab="api">File Method / API</button>
+													<button class="tab" data-tab="pitfalls">Pitfalls</button>
+												</div>
+
+												<div class="panel active" id="panel-mft"></div>
+												<div class="panel" id="panel-usn"></div>
+												<div class="panel" id="panel-log"></div>
+												<div class="panel" id="panel-api"></div>
+												<div class="panel" id="panel-pitfalls"></div>
+											</div>
+										</article>
+									</div>
+
+							</div>
+						</div>
+					</div>
+				</section>
+
+			<!-- Footer -->
+				<section id="footer" class="wrapper">
+					<div class="title">NTFS File Operations</div>
+					<div class="container">
+						<header class="style1">
+							<h2>Understanding NTFS File Operations</h2>
+							<p>
+								This guide provides detailed information about how file operations manifest in NTFS artifacts.<br />
+								Useful for digital forensics analysis and security research.
+							</p>
+						</header>
+						<div id="copyright">
+							<ul>
+								<li>&copy; NTFS File Operations.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</div>
+				</section>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			<script src="app.js"></script>
+
+	</body>
 </html>

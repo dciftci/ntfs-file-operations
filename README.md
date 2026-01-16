@@ -1,4 +1,4 @@
-# NTFS Artifacts Guide — $MFT / $J / $LogFile
+# NTFS File Operations — $MFT / $J / $LogFile
 
 Interactive reference tool for understanding how file and folder operations appear in NTFS artifacts ($MFT, $J/USN Journal, $LogFile).
 
@@ -41,9 +41,11 @@ This tool helps digital forensics analysts and security researchers understand:
 
 ```
 .
-├── index.html      # Main HTML structure
-├── style.css       # Dark theme styling
+├── index.html      # Main HTML structure (using HTML5 UP Escape Velocity template)
 ├── app.js          # Operation data + UI logic
+├── assets/         # CSS, JS, fonts (template assets)
+├── images/         # Template images
+├── LICENSE.txt     # Creative Commons Attribution 3.0 License
 └── README.md       # This file
 ```
 
@@ -52,8 +54,8 @@ This tool helps digital forensics analysts and security researchers understand:
 - **Interactive Operation Browser**: Click operations to view detailed artifact signals
 - **Multi-Artifact View**: Tabs for $MFT, $J (USN), $LogFile, API patterns, and pitfalls
 - **Search**: Filter operations by name, description, or API method
-- **Responsive Design**: Works on desktop and mobile devices
-- **Dark Theme**: Easy on the eyes for long analysis sessions
+- **Responsive Design**: Works on desktop and mobile devices (using HTML5 UP Escape Velocity template)
+- **Professional Layout**: Clean, modern interface with left sidebar navigation
 
 ## 📋 Included Operations
 
@@ -99,4 +101,6 @@ To add more operations or modify existing ones, edit the `OPS` array in `app.js`
 
 ## 📄 License
 
-Free to use and modify for educational and professional purposes.
+This project uses the Escape Velocity template by HTML5 UP, which is licensed under the Creative Commons Attribution 3.0 License. See LICENSE.txt for details.
+
+The NTFS File Operations content and data are free to use and modify for educational and professional purposes.
