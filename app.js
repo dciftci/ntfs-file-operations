@@ -1,10 +1,10 @@
-const OPS = [
+const FILE_OPS = [
   {
     id: "create-file",
-    name: "Create File",
-    tag: "FILE",
-    desc: "New file appears on disk (dropper, staging output, temporary artifact).",
-    chips: ["High value for timelines", "Correlate $J + $MFT"],
+    name: "Create (new file)",
+    useCase: "Payload drop in Temp, tool output (dump/log), staging files",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "File creation activity happened around X; $MFT confirms file record + metadata",
     mft: [
       "New MFT record allocated; $STANDARD_INFORMATION (SI) + $FILE_NAME (FN) attributes present.",
       "SI timestamps set (Created/Modified/Changed). FN timestamps may reflect directory entry creation.",
@@ -17,23 +17,14 @@ const OPS = [
     log: [
       "Transaction activity for record allocation + attribute initialization.",
       "Often reflects the low-level steps of creating metadata and preparing file data."
-    ],
-    api: [
-      "CreateFile(...) with CREATE_NEW / CREATE_ALWAYS",
-      "WriteFile(...) (if initial content written)",
-      "CloseHandle(...)"
-    ],
-    pitfalls: [
-      "Some apps use 'safe save': create temp file → write → rename swap (looks like create+rename, not overwrite).",
-      "USN Journal can roll over; absence in $J ≠ no creation."
     ]
   },
   {
     id: "write-modify",
-    name: "Write / Modify (Append or Change)",
-    tag: "FILE",
-    desc: "Existing file content is modified or appended (logs, configs, staging archives).",
-    chips: ["Great for tool execution traces", "Watch safe-save patterns"],
+    name: "Write / Modify (append or change content)",
+    useCase: "Logging, config edits, building an archive gradually",
+    bestArtifacts: "$J + $LogFile, validate with $MFT",
+    conclusion: "Content was written/extended; $LogFile can show write sequencing, $J shows high-level change",
     mft: [
       "SI Modified time typically updates; size/allocation may change.",
       "$DATA attribute VCN/LCN mapping changes if file grows (non-resident)."
@@ -45,24 +36,14 @@ const OPS = [
     log: [
       "Shows transactional write sequence (redo/undo style records) when metadata/data updates occur.",
       "Useful to understand 'how' the write happened (sequence), not just that it happened."
-    ],
-    api: [
-      "CreateFile(..., OPEN_EXISTING)",
-      "SetFilePointer/SetFilePointerEx (optional)",
-      "WriteFile(...) / FlushFileBuffers(...)",
-      "CloseHandle(...)"
-    ],
-    pitfalls: [
-      "Log rotation can look like truncate + new writes (normal behavior).",
-      "$MFT timestamps alone can be misleading if attacker timestomps."
     ]
   },
   {
     id: "overwrite",
-    name: "Overwrite (In-place Replace Content)",
-    tag: "FILE",
-    desc: "Content replaced without deleting the file (anti-forensics, log tampering).",
-    chips: ["Best: $J + $LogFile", "Validate vs safe-save"],
+    name: "Overwrite (in-place replace content)",
+    useCase: "\"Clean-up\" by overwriting logs/artifacts without deleting",
+    bestArtifacts: "$J + $LogFile",
+    conclusion: "Strong evidence of content replacement (vs just metadata change)",
     mft: [
       "SI Modified time changes; file size may stay the same (classic overwrite) or change (overwrite+extend).",
       "No new record necessarily—same MFT entry persists."
@@ -74,23 +55,14 @@ const OPS = [
     log: [
       "Strongest place (among these) to reason about in-place update steps when available.",
       "Can help differentiate overwrite vs create+rename swap patterns."
-    ],
-    api: [
-      "CreateFile(..., OPEN_EXISTING)",
-      "WriteFile(...) at existing offsets",
-      "FlushFileBuffers(...) (optional)"
-    ],
-    pitfalls: [
-      "Many editors do NOT overwrite in place; they do safe-save (temp file + rename).",
-      "Absence in $LogFile is common depending on retention/volume activity."
     ]
   },
   {
     id: "truncate",
-    name: "Truncate (Shrink File / Clear Log)",
-    tag: "FILE",
-    desc: "File size reduced (often to 0) while keeping the filename (log wiping).",
-    chips: ["Very common for log tampering", "Check for follow-up writes"],
+    name: "Truncate (shrink to 0 / reduce size)",
+    useCase: "Clearing a log while keeping the file name",
+    bestArtifacts: "$J + $MFT (sometimes $LogFile)",
+    conclusion: "File size reduction occurred; common \"log wiped\" pattern",
     mft: [
       "File size decreases; SI Modified time updates.",
       "Allocation size may not immediately drop to 0 depending on behavior."
@@ -101,21 +73,14 @@ const OPS = [
     ],
     log: [
       "Transactional steps around size change and potential deallocation behavior."
-    ],
-    api: [
-      "SetEndOfFile(...) or SetFileInformationByHandle(FileEndOfFileInfo)",
-      "Sometimes followed by WriteFile(...)"
-    ],
-    pitfalls: [
-      "Normal apps/loggers rotate or truncate logs automatically (avoid over-attribution)."
     ]
   },
   {
     id: "rename",
-    name: "Rename File",
-    tag: "FILE",
-    desc: "Filename changed to hide intent (e.g., dump renamed to benign-looking name).",
-    chips: ["$J is king for old/new", "Correlate path context"],
+    name: "Rename",
+    useCase: "lsass.dmp → system.dat to hide; extension swaps",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Often recover old+new names (via $J), confirm final state (via $MFT)",
     mft: [
       "$FILE_NAME attribute updated (directory entry/name).",
       "SI timestamps may update (often Changed time)."
@@ -126,21 +91,14 @@ const OPS = [
     ],
     log: [
       "Transactional rename steps (metadata updates) may be visible."
-    ],
-    api: [
-      "MoveFileEx(...) / MoveFile(...)",
-      "SetFileInformationByHandle(FileRenameInfo)"
-    ],
-    pitfalls: [
-      "Rename is also common in normal software updates and safe-save workflows."
     ]
   },
   {
     id: "move-same-volume",
-    name: "Move File (Same Volume)",
-    tag: "FILE",
-    desc: "File moved to different directory on same NTFS volume (staging / hiding).",
-    chips: ["Looks like rename at NTFS level", "Focus on directory context"],
+    name: "Move (same volume)",
+    useCase: "Moving payload from obvious folder to obscure location",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Path relationship changed; great for timeline chaining with rename/create",
     mft: [
       "Filename/path relationship changes (FN attribute reflects directory entry).",
       "MFT record usually remains the same."
@@ -150,20 +108,32 @@ const OPS = [
     ],
     log: [
       "Transactional metadata update steps may appear."
+    ]
+  },
+  {
+    id: "copy",
+    name: "Copy",
+    useCase: "Toolkit copied into another directory",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Copy usually appears as create+write at destination; prove by correlation (source + destination timing)",
+    mft: [
+      "New MFT record at destination; original file's MFT record unchanged.",
+      "Both source and destination timestamps visible if correlated."
     ],
-    api: [
-      "MoveFileEx(...) / MoveFile(...)"
+    usn: [
+      "Create event at destination; source file may show READ operations.",
+      "Multiple USN records if large file (chunked copy)."
     ],
-    pitfalls: [
-      "Moves across volumes become copy+delete (different pattern)."
+    log: [
+      "Transaction records for destination file creation and data writes."
     ]
   },
   {
     id: "delete",
-    name: "Delete File",
-    tag: "FILE",
-    desc: "File removed (post-execution cleanup).",
-    chips: ["$J provides timing", "$MFT shows record state"],
+    name: "Delete",
+    useCase: "Post-execution cleanup",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Delete event time (if still in $J) + $MFT record marked unused",
     mft: [
       "MFT record may be marked unused; filename attributes may persist until reused.",
       "Recovery feasibility depends on reuse/overwrite."
@@ -173,56 +143,243 @@ const OPS = [
     ],
     log: [
       "Transactional steps around unlinking/metadata update may appear."
+    ]
+  },
+  {
+    id: "secure-delete",
+    name: "Secure-delete / wiping behavior",
+    useCase: "Anti-forensics (multiple overwrites)",
+    bestArtifacts: "$LogFile (+ $J when present)",
+    conclusion: "Possible overwrite-heavy patterns; confirmation often needs free-space analysis/other telemetry",
+    mft: [
+      "May show multiple Modified time changes if not timestomped.",
+      "File size may remain but content overwritten multiple times."
     ],
-    api: [
-      "DeleteFile(...)",
-      "Or SetFileInformationByHandle(FileDispositionInfo / FileDispositionInfoEx)"
+    usn: [
+      "Multiple DATA_OVERWRITE events in short time period.",
+      "May also show delete after overwrite sequence."
     ],
-    pitfalls: [
-      "Recycle Bin behavior can create extra moves/renames instead of direct delete."
+    log: [
+      "Multiple overwrite transactions visible if $LogFile retention allows.",
+      "Strongest indicator of intentional content destruction."
+    ]
+  },
+  {
+    id: "timestomp",
+    name: "Timestomp (timestamp manipulation)",
+    useCase: "Make file look old/new to mislead timeline",
+    bestArtifacts: "$J / $LogFile vs $MFT",
+    conclusion: "$MFT timestamps alone can lie; $J/$LogFile can show \"real activity time\"",
+    mft: [
+      "SI timestamps may show manipulated values (old or future dates).",
+      "FN timestamps may still reflect real creation time if not explicitly changed."
+    ],
+    usn: [
+      "$J timestamps reflect real activity time (not easily manipulated without admin privileges).",
+      "Correlate $J timing with $MFT to detect discrepancies."
+    ],
+    log: [
+      "$LogFile transaction timestamps show real system time of operations.",
+      "Compare with $MFT to identify timestamp manipulation."
+    ]
+  },
+  {
+    id: "metadata-only",
+    name: "Metadata-only change (attributes/permissions)",
+    useCase: "Hide file (hidden/system), restrict access",
+    bestArtifacts: "$MFT + $J",
+    conclusion: "Attribute/ACL changes can appear without content writes—useful for stealth/persistence narratives",
+    mft: [
+      "SI attributes field changes (hidden, system, archive flags).",
+      "Security descriptor may change if permissions modified."
+    ],
+    usn: [
+      "BASIC_INFO_CHANGE reason typically present.",
+      "May also show SECURITY_CHANGE if ACL modified."
+    ],
+    log: [
+      "Transactional metadata updates visible if attributes/permissions changed."
+    ]
+  },
+  {
+    id: "ads-write",
+    name: "ADS write (alternate data stream)",
+    useCase: "Hide payload in legit.txt:evil.bin",
+    bestArtifacts: "$MFT + $J (sometimes $LogFile)",
+    conclusion: "Evidence of stream presence/changes; good for \"hidden content\" staging",
+    mft: [
+      "$DATA attribute entries for named streams visible in MFT record.",
+      "Main file data and ADS data shown as separate $DATA attributes."
+    ],
+    usn: [
+      "Stream creation/write may generate USN records with stream name.",
+      "FILE_CREATE or DATA_EXTEND with stream context."
+    ],
+    log: [
+      "Transactional records for stream attribute creation and data writes."
     ]
   }
 ];
 
+const FOLDER_OPS = [
+  {
+    id: "create-folder",
+    name: "Create folder",
+    useCase: "Create staging dir: C:\\ProgramData\\Intel\\Cache\\",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Folder creation happened around X; helps explain later file drops",
+    mft: [
+      "New MFT record allocated for directory; $INDEX_ROOT and/or $INDEX_ALLOCATION present.",
+      "SI timestamps set (Created/Modified/Changed).",
+      "Directory entry appears in parent directory's index."
+    ],
+    usn: [
+      "USN record includes: USN_REASON_FILE_CREATE for the directory.",
+      "Parent directory may show INDEX_CHANGE event."
+    ],
+    log: [
+      "Transaction activity for directory record allocation and index updates."
+    ]
+  },
+  {
+    id: "rename-folder",
+    name: "Rename folder",
+    useCase: "Rename staging dir after use to look benign",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Old/new folder names often visible via $J; $MFT confirms final state",
+    mft: [
+      "$FILE_NAME attribute updated in directory's MFT record.",
+      "SI Changed time typically updates.",
+      "Parent directory's index updated with new name."
+    ],
+    usn: [
+      "RENAME_OLD_NAME and RENAME_NEW_NAME reasons for the directory.",
+      "Parent directory may show INDEX_CHANGE."
+    ],
+    log: [
+      "Transactional rename steps for directory metadata updates."
+    ]
+  },
+  {
+    id: "move-folder",
+    name: "Move folder (same volume)",
+    useCase: "Move entire toolkit to a different path",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Directory relocation evidence; supports \"toolkit moved then executed\" story",
+    mft: [
+      "Directory's FN attribute shows new parent path.",
+      "MFT record usually remains the same (same volume move).",
+      "Both old and new parent directories' indexes updated."
+    ],
+    usn: [
+      "RENAME events showing old/new paths for directory.",
+      "Multiple INDEX_CHANGE events in old/new parent directories."
+    ],
+    log: [
+      "Transactional steps for directory relocation and index updates."
+    ]
+  },
+  {
+    id: "delete-folder",
+    name: "Delete folder",
+    useCase: "Cleanup after exfil/tool execution",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "Folder deletion timing (if in $J) + MFT record state change",
+    mft: [
+      "Directory MFT record marked unused (if not recycled yet).",
+      "Parent directory's index updated (directory entry removed).",
+      "Child files/directories may remain until explicitly deleted."
+    ],
+    usn: [
+      "FILE_DELETE reason for the directory.",
+      "Parent directory shows INDEX_CHANGE event."
+    ],
+    log: [
+      "Transactional steps around directory unlinking and index updates."
+    ]
+  },
+  {
+    id: "permission-folder",
+    name: "Permission/ACL change on folder",
+    useCase: "Block access, persistence via restricted dirs",
+    bestArtifacts: "$MFT + $J",
+    conclusion: "Shows security/attribute changes affecting many child files indirectly",
+    mft: [
+      "Directory's security descriptor modified in $STANDARD_INFORMATION.",
+      "Access permissions, ownership, or audit settings changed."
+    ],
+    usn: [
+      "SECURITY_CHANGE or BASIC_INFO_CHANGE reason for directory.",
+      "May affect child files' effective permissions."
+    ],
+    log: [
+      "Transactional security descriptor updates for directory."
+    ]
+  },
+  {
+    id: "hide-folder",
+    name: "Hide folder (attributes)",
+    useCase: "Mark as hidden/system to reduce visibility",
+    bestArtifacts: "$MFT + $J",
+    conclusion: "Attribute change evidence even if no file content changes",
+    mft: [
+      "SI attributes field updated (hidden, system flags set).",
+      "Directory still accessible but less visible in normal listings."
+    ],
+    usn: [
+      "BASIC_INFO_CHANGE reason for directory.",
+      "Attribute modification timestamp updated."
+    ],
+    log: [
+      "Transactional metadata update for attribute changes."
+    ]
+  }
+];
+
+let currentType = "FILE"; // "FILE" or "FOLDER"
+let activeId = null;
+
 const elOpList = document.getElementById("opList");
 const elSearch = document.getElementById("searchBox");
+const elTypeToggle = document.getElementById("typeToggle");
 
 const elEmpty = document.getElementById("emptyState");
 const elDetails = document.getElementById("details");
 const elTitle = document.getElementById("opTitle");
-const elDesc = document.getElementById("opDesc");
-const elChips = document.getElementById("opChips");
+const elUseCase = document.getElementById("opUseCase");
+const elBestArtifacts = document.getElementById("opBestArtifacts");
+const elConclusion = document.getElementById("opConclusion");
 
 const panels = {
   mft: document.getElementById("panel-mft"),
   usn: document.getElementById("panel-usn"),
-  log: document.getElementById("panel-log"),
-  api: document.getElementById("panel-api"),
-  pitfalls: document.getElementById("panel-pitfalls")
+  log: document.getElementById("panel-log")
 };
 
-let activeId = null;
+function getCurrentOps() {
+  return currentType === "FILE" ? FILE_OPS : FOLDER_OPS;
+}
 
 function renderList(filter = "") {
   elOpList.innerHTML = "";
   const q = filter.trim().toLowerCase();
-  const items = OPS.filter(o =>
+  const ops = getCurrentOps();
+  const items = ops.filter(o =>
     !q ||
     o.name.toLowerCase().includes(q) ||
-    o.desc.toLowerCase().includes(q) ||
-    o.tag.toLowerCase().includes(q) ||
-    (o.api || []).some(x => x.toLowerCase().includes(q))
+    o.useCase.toLowerCase().includes(q) ||
+    o.bestArtifacts.toLowerCase().includes(q) ||
+    o.conclusion.toLowerCase().includes(q)
   );
 
   items.forEach(op => {
     const li = document.createElement("li");
     li.className = "op-item" + (op.id === activeId ? " active" : "");
     li.innerHTML = `
-      <div class="op-header">
-        <div class="op-name">${op.name}</div>
-        <div class="op-tag">${op.tag}</div>
-      </div>
-      <div class="op-desc">${op.desc}</div>
+        <div class="op-header">
+          <div class="op-name">${op.name}</div>
+        </div>
+      <div class="op-desc">${op.useCase}</div>
     `;
     li.onclick = () => showDetails(op.id);
     elOpList.appendChild(li);
@@ -230,6 +387,7 @@ function renderList(filter = "") {
 }
 
 function listToHtml(title, arr) {
+  if (!arr || arr.length === 0) return "";
   return `
     <h3>${title}</h3>
     <ul>
@@ -239,7 +397,8 @@ function listToHtml(title, arr) {
 }
 
 function showDetails(id) {
-  const op = OPS.find(o => o.id === id);
+  const ops = getCurrentOps();
+  const op = ops.find(o => o.id === id);
   if (!op) return;
 
   activeId = id;
@@ -250,15 +409,13 @@ function showDetails(id) {
   elDetails.classList.add("active");
 
   elTitle.textContent = op.name;
-  elDesc.textContent = op.desc;
-
-  elChips.innerHTML = (op.chips || []).map(c => `<span class="chip">${c}</span>`).join("");
+  elUseCase.textContent = op.useCase;
+  elBestArtifacts.textContent = op.bestArtifacts;
+  elConclusion.textContent = op.conclusion;
 
   panels.mft.innerHTML = listToHtml("$MFT — how it typically appears", op.mft || []);
   panels.usn.innerHTML = listToHtml("$J (USN) — common reason flags / signals", op.usn || []);
   panels.log.innerHTML = listToHtml("$LogFile — what you may observe", op.log || []);
-  panels.api.innerHTML = listToHtml("Likely Windows file method / API pattern", op.api || []);
-  panels.pitfalls.innerHTML = listToHtml("Pitfalls / false positives", op.pitfalls || []);
 
   // reset tabs
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -272,7 +429,7 @@ function showDetails(id) {
     }
   });
   if (panels.mft) {
-    panels.mft.classList.add("active");
+  panels.mft.classList.add("active");
     panels.mft.style.display = "block";
   }
 }
@@ -297,6 +454,21 @@ function setupTabs() {
   });
 }
 
+function switchType(type) {
+  currentType = type;
+  activeId = null;
+  elDetails.style.display = "none";
+  elDetails.classList.remove("active");
+  elEmpty.style.display = "block";
+  renderList(elSearch.value);
+  
+  // Update toggle buttons
+  document.querySelectorAll(".type-toggle").forEach(btn => {
+    btn.classList.remove("active");
+  });
+  document.querySelector(`.type-toggle[data-type="${type}"]`).classList.add("active");
+}
+
 // Wait for DOM to be ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
@@ -311,3 +483,10 @@ if (document.readyState === 'loading') {
 if (elSearch) {
   elSearch.addEventListener("input", () => renderList(elSearch.value));
 }
+
+// Setup type toggle buttons
+document.querySelectorAll(".type-toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    switchType(btn.dataset.type);
+  });
+});

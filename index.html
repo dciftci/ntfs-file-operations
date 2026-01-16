@@ -93,6 +93,34 @@
       padding-bottom: 0.5rem;
     }
     
+    .type-toggle-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .type-toggle {
+      flex: 1;
+      padding: 0.5rem;
+      background-color: transparent;
+      border: 1px solid var(--accent);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .type-toggle:hover {
+      background-color: rgba(0, 255, 0, 0.1);
+    }
+    
+    .type-toggle.active {
+      background-color: var(--accent);
+      color: var(--bg);
+      font-weight: bold;
+    }
+    
     #searchBox {
       width: 100%;
       padding: 0.75rem;
@@ -196,23 +224,27 @@
       color: var(--accent);
     }
     
-    .details-header p {
-      color: var(--fg-muted);
+    .details-meta {
       margin-bottom: 1rem;
     }
     
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1rem;
+    .details-meta-row {
+      margin: 0.75rem 0;
+      padding: 0.75rem;
+      border: 1px solid var(--accent);
+      background-color: rgba(0, 255, 0, 0.02);
     }
     
-    .chip {
-      padding: 0.4rem 0.75rem;
-      border: 1px solid var(--accent);
+    .details-meta-label {
       color: var(--accent);
-      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+    
+    .details-meta-value {
+      color: var(--fg-muted);
+      font-size: 0.9rem;
     }
     
     /* Tabs */
@@ -319,6 +351,10 @@
     <aside class="sidebar">
       <section class="sidebar-section">
         <h2>Operations</h2>
+        <div class="type-toggle-container">
+          <button class="type-toggle active" data-type="FILE">FILE</button>
+          <button class="type-toggle" data-type="FOLDER">FOLDER</button>
+        </div>
         <input type="text" id="searchBox" placeholder="Search operations..." />
         <ul id="opList"></ul>
       </section>
@@ -343,23 +379,31 @@
       <div id="details">
         <div class="details-header">
           <h1 id="opTitle"></h1>
-          <p id="opDesc"></p>
-          <div id="opChips" class="chips"></div>
+          <div class="details-meta">
+            <div class="details-meta-row">
+              <div class="details-meta-label">Typical DFIR / attacker use-case</div>
+              <div class="details-meta-value" id="opUseCase"></div>
+            </div>
+            <div class="details-meta-row">
+              <div class="details-meta-label">Best artifact(s)</div>
+              <div class="details-meta-value" id="opBestArtifacts"></div>
+            </div>
+            <div class="details-meta-row">
+              <div class="details-meta-label">What you can conclude</div>
+              <div class="details-meta-value" id="opConclusion"></div>
+            </div>
+          </div>
         </div>
 
         <div class="tabs">
           <button class="tab active" data-tab="mft">$MFT</button>
           <button class="tab" data-tab="usn">$J (USN)</button>
           <button class="tab" data-tab="log">$LogFile</button>
-          <button class="tab" data-tab="api">File Method / API</button>
-          <button class="tab" data-tab="pitfalls">Pitfalls</button>
         </div>
 
         <div class="panel active" id="panel-mft"></div>
         <div class="panel" id="panel-usn"></div>
         <div class="panel" id="panel-log"></div>
-        <div class="panel" id="panel-api"></div>
-        <div class="panel" id="panel-pitfalls"></div>
       </div>
     </section>
   </main>
