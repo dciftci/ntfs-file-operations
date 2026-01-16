@@ -218,13 +218,11 @@ function renderList(filter = "") {
     const li = document.createElement("li");
     li.className = "op-item" + (op.id === activeId ? " active" : "");
     li.innerHTML = `
-      <article class="box post-excerpt">
-        <div class="op-header">
-          <div class="op-name">${op.name}</div>
-          <div class="op-tag">${op.tag}</div>
-        </div>
-        <div class="op-desc">${op.desc}</div>
-      </article>
+      <div class="op-header">
+        <div class="op-name">${op.name}</div>
+        <div class="op-tag">${op.tag}</div>
+      </div>
+      <div class="op-desc">${op.desc}</div>
     `;
     li.onclick = () => showDetails(op.id);
     elOpList.appendChild(li);
@@ -263,10 +261,19 @@ function showDetails(id) {
 
   // reset tabs
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelector('.tab[data-tab="mft"]').classList.add("active");
+  const firstTab = document.querySelector('.tab[data-tab="mft"]');
+  if (firstTab) firstTab.classList.add("active");
 
-  Object.keys(panels).forEach(k => panels[k].classList.remove("active"));
-  panels.mft.classList.add("active");
+  Object.keys(panels).forEach(k => {
+    if (panels[k]) {
+      panels[k].classList.remove("active");
+      panels[k].style.display = "none";
+    }
+  });
+  if (panels.mft) {
+    panels.mft.classList.add("active");
+    panels.mft.style.display = "block";
+  }
 }
 
 function setupTabs() {
@@ -275,8 +282,16 @@ function setupTabs() {
       const tab = btn.dataset.tab;
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       btn.classList.add("active");
-      Object.keys(panels).forEach(k => panels[k].classList.remove("active"));
-      if (panels[tab]) panels[tab].classList.add("active");
+      Object.keys(panels).forEach(k => {
+        if (panels[k]) {
+          panels[k].classList.remove("active");
+          panels[k].style.display = "none";
+        }
+      });
+      if (panels[tab]) {
+        panels[tab].classList.add("active");
+        panels[tab].style.display = "block";
+      }
     });
   });
 }
