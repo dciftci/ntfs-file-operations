@@ -417,39 +417,32 @@ function showDetails(id) {
   panels.usn.innerHTML = listToHtml("$J (USN) — common reason flags / signals", op.usn || []);
   panels.log.innerHTML = listToHtml("$LogFile — what you may observe", op.log || []);
 
-  // reset tabs
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  const firstTab = document.querySelector('.tab[data-tab="mft"]');
-  if (firstTab) firstTab.classList.add("active");
+  // All tabs and panels start as active (multi-select)
+  updatePanelVisibility();
+}
 
-  Object.keys(panels).forEach(k => {
-    if (panels[k]) {
-      panels[k].classList.remove("active");
-      panels[k].style.display = "none";
+function updatePanelVisibility() {
+  document.querySelectorAll(".tab").forEach(btn => {
+    const tab = btn.dataset.tab;
+    const panel = panels[tab];
+    if (panel) {
+      if (btn.classList.contains("active")) {
+        panel.classList.add("active");
+        panel.style.display = "block";
+      } else {
+        panel.classList.remove("active");
+        panel.style.display = "none";
+      }
     }
   });
-  if (panels.mft) {
-  panels.mft.classList.add("active");
-    panels.mft.style.display = "block";
-  }
 }
 
 function setupTabs() {
   document.querySelectorAll(".tab").forEach(btn => {
     btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      btn.classList.add("active");
-      Object.keys(panels).forEach(k => {
-        if (panels[k]) {
-          panels[k].classList.remove("active");
-          panels[k].style.display = "none";
-        }
-      });
-      if (panels[tab]) {
-        panels[tab].classList.add("active");
-        panels[tab].style.display = "block";
-      }
+      // Toggle active state
+      btn.classList.toggle("active");
+      updatePanelVisibility();
     });
   });
 }
