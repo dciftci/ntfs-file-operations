@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NTFS Artifacts Guide — $MFT / $J / $LogFile</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">NTFS</div>
+      <div>
+        <div class="title">$MFT • $J (USN) • $LogFile</div>
+        <div class="subtitle">Interactive guide for file/folder operations</div>
+      </div>
+    </div>
+    <input id="search" class="search" placeholder="Search operations (e.g., overwrite, rename, delete)..." />
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="section-title">Operations</div>
+        <div class="hint">Click an operation to view artifact signals</div>
+      </div>
+      <div id="opList" class="op-list"></div>
+    </aside>
+
+    <section class="content">
+      <div id="emptyState" class="empty">
+        <h2>Pick an operation</h2>
+        <p>Example: <b>Create File</b> → see how it appears in <b>$MFT</b>, <b>$J</b>, and <b>$LogFile</b>.</p>
+      </div>
+
+      <div id="details" class="details hidden">
+        <div class="details-header">
+          <h1 id="opTitle"></h1>
+          <p id="opDesc" class="muted"></p>
+          <div class="chips" id="opChips"></div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="mft">$MFT</button>
+          <button class="tab" data-tab="usn">$J (USN)</button>
+          <button class="tab" data-tab="log">$LogFile</button>
+          <button class="tab" data-tab="api">File Method / API</button>
+          <button class="tab" data-tab="pitfalls">Pitfalls</button>
+        </div>
+
+        <div class="panel" id="panel-mft"></div>
+        <div class="panel hidden" id="panel-usn"></div>
+        <div class="panel hidden" id="panel-log"></div>
+        <div class="panel hidden" id="panel-api"></div>
+        <div class="panel hidden" id="panel-pitfalls"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
