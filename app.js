@@ -404,6 +404,9 @@ function showDetails(id) {
   elDetails.style.display = "block";
   elDetails.classList.add("active");
 
+  // Scroll to top of page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
   elTitle.textContent = op.name;
   elUseCase.textContent = op.useCase;
 
