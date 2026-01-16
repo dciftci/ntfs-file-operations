@@ -79,10 +79,9 @@
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
-      height: calc(100vh - 200px);
-      overflow-y: auto;
       position: sticky;
       top: 2rem;
+      align-self: start;
     }
     
     .sidebar-section {
@@ -95,11 +94,13 @@
       display: flex;
       flex-direction: column;
       max-height: calc(100vh - 250px);
+      overflow: hidden;
     }
     
     #opList {
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
       padding-right: 0.5rem;
     }
     
@@ -415,14 +416,6 @@
             <div class="details-meta-row">
               <div class="details-meta-label">Typical DFIR / attacker use-case</div>
               <div class="details-meta-value" id="opUseCase"></div>
-            </div>
-            <div class="details-meta-row">
-              <div class="details-meta-label">Best artifact(s)</div>
-              <div class="details-meta-value" id="opBestArtifacts"></div>
-            </div>
-            <div class="details-meta-row">
-              <div class="details-meta-label">What you can conclude</div>
-              <div class="details-meta-value" id="opConclusion"></div>
             </div>
           </div>
         </div>

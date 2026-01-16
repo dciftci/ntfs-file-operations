@@ -347,8 +347,6 @@ const elEmpty = document.getElementById("emptyState");
 const elDetails = document.getElementById("details");
 const elTitle = document.getElementById("opTitle");
 const elUseCase = document.getElementById("opUseCase");
-const elBestArtifacts = document.getElementById("opBestArtifacts");
-const elConclusion = document.getElementById("opConclusion");
 
 const panels = {
   mft: document.getElementById("panel-mft"),
@@ -367,9 +365,7 @@ function renderList(filter = "") {
   const items = ops.filter(o =>
     !q ||
     o.name.toLowerCase().includes(q) ||
-    o.useCase.toLowerCase().includes(q) ||
-    o.bestArtifacts.toLowerCase().includes(q) ||
-    o.conclusion.toLowerCase().includes(q)
+    o.useCase.toLowerCase().includes(q)
   );
 
   items.forEach(op => {
@@ -410,8 +406,6 @@ function showDetails(id) {
 
   elTitle.textContent = op.name;
   elUseCase.textContent = op.useCase;
-  elBestArtifacts.textContent = op.bestArtifacts;
-  elConclusion.textContent = op.conclusion;
 
   panels.mft.innerHTML = listToHtml("$MFT — how it typically appears", op.mft || []);
   panels.usn.innerHTML = listToHtml("$J (USN) — common reason flags / signals", op.usn || []);
