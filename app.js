@@ -17,6 +17,11 @@ const FILE_OPS = [
     log: [
       "Transaction activity for record allocation + attribute initialization.",
       "Often reflects the low-level steps of creating metadata and preparing file data."
+    ],
+    lnk: [
+      "LNK files may be created pointing to this new file (shortcut creation for persistence or user convenience).",
+      "LNK file creation timestamp may correlate with target file creation if shortcut created immediately.",
+      "Check Desktop, Start Menu, Quick Launch for related .lnk files referencing this target."
     ]
   },
   {
@@ -36,6 +41,11 @@ const FILE_OPS = [
     log: [
       "Shows transactional write sequence (redo/undo style records) when metadata/data updates occur.",
       "Useful to understand 'how' the write happened (sequence), not just that it happened."
+    ],
+    lnk: [
+      "LNK files pointing to this target remain valid (target path unchanged).",
+      "LNK file Accessed time may update if shortcut used to launch/access the modified file.",
+      "No LNK structure changes unless target executable path changed."
     ]
   },
   {
@@ -55,6 +65,11 @@ const FILE_OPS = [
     log: [
       "Strongest place (among these) to reason about in-place update steps when available.",
       "Can help differentiate overwrite vs create+rename swap patterns."
+    ],
+    lnk: [
+      "LNK files remain valid if target file path unchanged (overwrite preserves file name/path).",
+      "LNK file Accessed time may reflect when shortcut was used to access the overwritten content.",
+      "If target is executable, LNK execution may trigger after overwrite (timeline correlation)."
     ]
   },
   {
@@ -73,6 +88,11 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional steps around size change and potential deallocation behavior."
+    ],
+    lnk: [
+      "LNK files pointing to truncated file remain valid (file path/name unchanged).",
+      "If target executable truncated to 0, LNK execution may fail (check for error indicators).",
+      "LNK file Accessed time may correlate with truncation event if shortcut attempted before/after."
     ]
   },
   {
@@ -91,6 +111,12 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional rename steps (metadata updates) may be visible."
+    ],
+    lnk: [
+      "LNK files with old file path become broken/unresolvable (target path mismatch).",
+      "Broken LNK files may show error indicators when accessed (useful for timeline correlation).",
+      "New LNK files may be created with new path; compare LNK creation time with rename time.",
+      "Check for LNK file modification attempts to update target path after rename."
     ]
   },
   {
@@ -108,6 +134,12 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional metadata update steps may appear."
+    ],
+    lnk: [
+      "LNK files with old file path become broken/unresolvable after move (target path mismatch).",
+      "Broken LNK files show error when accessed; useful for timeline correlation with move event.",
+      "Check for LNK file creation at new location or LNK target path updates.",
+      "LNK files in Start Menu, Desktop may become invalid if target moved."
     ]
   },
   {
@@ -126,6 +158,11 @@ const FILE_OPS = [
     ],
     log: [
       "Transaction records for destination file creation and data writes."
+    ],
+    lnk: [
+      "New LNK files may be created at destination pointing to copied file.",
+      "Original LNK files at source location remain valid (source file unchanged).",
+      "Check for LNK file creation timestamps correlating with copy destination timestamp."
     ]
   },
   {
@@ -143,6 +180,12 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional steps around unlinking/metadata update may appear."
+    ],
+    lnk: [
+      "LNK files pointing to deleted file become broken/unresolvable.",
+      "Broken LNK files remain on disk (Desktop, Start Menu) and show errors when accessed.",
+      "LNK file creation time helps establish timeline (target existed before deletion).",
+      "Deleted file recovery may be possible via LNK file content (contains target path)."
     ]
   },
   {
@@ -162,6 +205,12 @@ const FILE_OPS = [
     log: [
       "Multiple overwrite transactions visible if $LogFile retention allows.",
       "Strongest indicator of intentional content destruction."
+    ],
+    lnk: [
+      "LNK files remain valid (file path/name unchanged, only content wiped).",
+      "LNK execution attempts may fail if target executable was securely deleted.",
+      "Check LNK file Accessed timestamps for execution attempts after secure delete.",
+      "LNK file may still contain target path even if target content is destroyed."
     ]
   },
   {
@@ -181,6 +230,12 @@ const FILE_OPS = [
     log: [
       "$LogFile transaction timestamps show real system time of operations.",
       "Compare with $MFT to identify timestamp manipulation."
+    ],
+    lnk: [
+      "LNK file timestamps may also be manipulated (timestomped) to match target file.",
+      "Compare LNK file MFT timestamps with LNK internal timestamp fields for discrepancies.",
+      "LNK execution timestamps (Prefetch, ShimCache) show real execution time (not easily manipulated).",
+      "Correlate LNK file creation time with target file timestamps to detect manipulation."
     ]
   },
   {
@@ -199,6 +254,12 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional metadata updates visible if attributes/permissions changed."
+    ],
+    lnk: [
+      "LNK files remain valid (target path unchanged, only attributes/permissions modified).",
+      "Hidden file attribute change doesn't affect LNK file functionality (shortcut still works).",
+      "If permissions restrict access, LNK execution may fail with access denied errors.",
+      "LNK file Accessed time may reflect execution attempts after permission changes."
     ]
   },
   {
@@ -217,6 +278,12 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional records for stream attribute creation and data writes."
+    ],
+    lnk: [
+      "LNK files remain valid (main file path unchanged, ADS is additional stream).",
+      "LNK execution may load ADS stream if target executable contains ADS payload.",
+      "LNK file may point to ADS stream directly (rare: target.exe:stream.bin format).",
+      "ADS detection via LNK file content analysis (if target path includes stream reference)."
     ]
   }
 ];
@@ -239,6 +306,12 @@ const FOLDER_OPS = [
     ],
     log: [
       "Transaction activity for directory record allocation and index updates."
+    ],
+    lnk: [
+      "LNK files may be created in new folder (shortcuts to files placed in staging directory).",
+      "LNK files created in folder show creation timestamp correlating with folder creation.",
+      "Check folder for .lnk files pointing to executables dropped in staging location.",
+      "Folder path becomes part of LNK target path (e.g., C:\\staging\\tool.exe)."
     ]
   },
   {
@@ -258,6 +331,12 @@ const FOLDER_OPS = [
     ],
     log: [
       "Transactional rename steps for directory metadata updates."
+    ],
+    lnk: [
+      "LNK files with target paths containing old folder name become broken/unresolvable.",
+      "LNK files need target path update or become invalid after folder rename.",
+      "Check for LNK file modification timestamps correlating with folder rename time.",
+      "Broken LNK files in Start Menu/Desktop if they reference renamed folder paths."
     ]
   },
   {
@@ -277,6 +356,12 @@ const FOLDER_OPS = [
     ],
     log: [
       "Transactional steps for directory relocation and index updates."
+    ],
+    lnk: [
+      "LNK files with target paths containing old folder location become broken/unresolvable.",
+      "LNK files need target path update after folder move or show errors when accessed.",
+      "Check for LNK file creation at new location or modification timestamps after move.",
+      "Broken LNK files indicate folder move timeline (LNK created before move, accessed after)."
     ]
   },
   {
@@ -296,6 +381,12 @@ const FOLDER_OPS = [
     ],
     log: [
       "Transactional steps around directory unlinking and index updates."
+    ],
+    lnk: [
+      "LNK files with target paths in deleted folder become broken/unresolvable.",
+      "Broken LNK files remain on disk (Desktop, Start Menu) showing folder path in target.",
+      "LNK file creation timestamps show when target folder existed (before deletion).",
+      "LNK file content may contain full target path including deleted folder (useful for recovery/reconstruction)."
     ]
   },
   {
@@ -314,6 +405,12 @@ const FOLDER_OPS = [
     ],
     log: [
       "Transactional security descriptor updates for directory."
+    ],
+    lnk: [
+      "LNK files remain valid (target paths unchanged, only folder permissions modified).",
+      "If folder permissions restrict access, LNK execution may fail with access denied errors.",
+      "LNK files in folder may become inaccessible if folder permissions prevent reading.",
+      "LNK file Accessed timestamps may reflect execution attempts affected by permission changes."
     ]
   },
   {
@@ -332,6 +429,12 @@ const FOLDER_OPS = [
     ],
     log: [
       "Transactional metadata update for attribute changes."
+    ],
+    lnk: [
+      "LNK files remain valid (target paths unchanged, only folder attributes modified).",
+      "Hidden folder attribute doesn't affect LNK file functionality (shortcuts still work).",
+      "LNK files in hidden folder may be less visible but remain functional.",
+      "Folder path in LNK target remains valid even if folder is hidden."
     ]
   }
 ];
@@ -469,7 +572,8 @@ const elUseCase = document.getElementById("opUseCase");
 const panels = {
   mft: document.getElementById("panel-mft"),
   usn: document.getElementById("panel-usn"),
-  log: document.getElementById("panel-log")
+  log: document.getElementById("panel-log"),
+  lnk: document.getElementById("panel-lnk")
 };
 
 function getCurrentOps() {
@@ -534,6 +638,7 @@ function showDetails(id) {
   panels.mft.innerHTML = listToHtml("$MFT — how it typically appears", op.mft || []);
   panels.usn.innerHTML = listToHtml("$J (USN) — common reason flags / signals", op.usn || []);
   panels.log.innerHTML = listToHtml("$LogFile — what you may observe", op.log || []);
+  panels.lnk.innerHTML = listToHtml("LNK Files — shortcut-related artifacts", op.lnk || []);
 
   // All tabs and panels start as active (multi-select)
   updatePanelVisibility();
