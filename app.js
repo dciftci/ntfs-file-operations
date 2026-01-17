@@ -336,7 +336,125 @@ const FOLDER_OPS = [
   }
 ];
 
-let currentType = "FILE"; // "FILE" or "FOLDER"
+const LNK_OPS = [
+  {
+    id: "create-lnk",
+    name: "Create LNK (shortcut)",
+    useCase: "Desktop/Start Menu shortcuts for persistence, launching payloads, or hiding execution",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "LNK file creation timestamp and location; target path visible in LNK file content",
+    mft: [
+      "New MFT record for .lnk file; standard file record structure.",
+      "SI timestamps set (Created/Modified/Changed).",
+      "$DATA attribute contains LNK binary format data (target path, working dir, icon, flags)."
+    ],
+    usn: [
+      "USN_REASON_FILE_CREATE for the .lnk file.",
+      "May also show BASIC_INFO_CHANGE if metadata written after creation."
+    ],
+    log: [
+      "Transaction activity for LNK file record allocation and data writes."
+    ]
+  },
+  {
+    id: "modify-lnk-target",
+    name: "Modify LNK target path",
+    useCase: "Change shortcut target to redirect to different executable (pivot attack, redirection)",
+    bestArtifacts: "$MFT + $J (LNK file content)",
+    conclusion: "Target path change in LNK file content; Modified timestamp updated; useful for tracking redirection",
+    mft: [
+      "SI Modified time updates when LNK target changed.",
+      "$DATA attribute overwritten with new LNK structure containing updated target path.",
+      "File size may change if new target path length differs."
+    ],
+    usn: [
+      "DATA_OVERWRITE or DATA_EXTEND reason (depending on size change).",
+      "BASIC_INFO_CHANGE if metadata (working dir, icon) also modified."
+    ],
+    log: [
+      "Transactional steps showing LNK file content modification (target path change)."
+    ]
+  },
+  {
+    id: "modify-lnk-metadata",
+    name: "Modify LNK metadata (icon, working dir, flags)",
+    useCase: "Change shortcut appearance or behavior (icon spoofing, working directory for relative paths)",
+    bestArtifacts: "$MFT + $J",
+    conclusion: "Metadata changes visible in LNK file; Modified timestamp reflects update",
+    mft: [
+      "SI Modified time updates.",
+      "$DATA attribute shows updated LNK flags, icon location, or working directory fields.",
+      "File size may change slightly depending on metadata size."
+    ],
+    usn: [
+      "DATA_OVERWRITE or BASIC_INFO_CHANGE reason.",
+      "May show multiple USN records if multiple fields changed."
+    ],
+    log: [
+      "Transactional metadata updates within LNK file structure."
+    ]
+  },
+  {
+    id: "delete-lnk",
+    name: "Delete LNK",
+    useCase: "Remove persistence shortcuts after execution or cleanup",
+    bestArtifacts: "$J + $MFT",
+    conclusion: "LNK file deletion timestamp; target path may still be recoverable from deleted LNK",
+    mft: [
+      "LNK file MFT record marked unused.",
+      "LNK file name attributes may persist until MFT record reused.",
+      "LNK file content (including target path) may remain on disk until overwritten."
+    ],
+    usn: [
+      "FILE_DELETE reason for the .lnk file."
+    ],
+    log: [
+      "Transactional steps for LNK file unlinking and MFT record state change."
+    ]
+  },
+  {
+    id: "lnk-timestamps",
+    name: "LNK file timestamps (Created/Modified/Accessed)",
+    useCase: "Timeline analysis for shortcut creation vs target execution; detect timestamp manipulation",
+    bestArtifacts: "$MFT SI timestamps + LNK internal timestamps",
+    conclusion: "Compare MFT timestamps with LNK internal timestamps; discrepancies may indicate manipulation",
+    mft: [
+      "SI Created time: LNK file creation on disk.",
+      "SI Modified time: Last time LNK file content changed (target/metadata update).",
+      "SI Accessed time: May reflect when shortcut was used (if tracking enabled)."
+    ],
+    usn: [
+      "$J timestamps show actual file system activity times.",
+      "Correlate with LNK internal timestamps (stored in LNK file structure)."
+    ],
+    log: [
+      "$LogFile shows real system time of LNK file operations.",
+      "Compare with LNK file's internal timestamp fields for discrepancies."
+    ]
+  },
+  {
+    id: "lnk-target-execution",
+    name: "LNK target execution (via shortcut)",
+    useCase: "Shortcut used to launch executable (persistence mechanism, user-initiated execution)",
+    bestArtifacts: "Prefetch, ShimCache, Amcache + $MFT/$J for LNK file access",
+    conclusion: "LNK file Accessed time may update; target executable execution artifacts appear; useful for persistence timeline",
+    mft: [
+      "LNK file SI Accessed time may update (depending on system configuration).",
+      "Target executable shows execution artifacts (Prefetch, $MFT timestamps, etc.).",
+      "Correlate LNK location (Desktop/Start Menu) with execution time."
+    ],
+    usn: [
+      "May show FILE_ACCESS if LNK file read tracked.",
+      "Target executable shows FILE_CREATE/EXECUTION if new process launched."
+    ],
+    log: [
+      "LNK file access transactions may appear.",
+      "Target executable launch transactions visible in $LogFile if process creation tracked."
+    ]
+  }
+];
+
+let currentType = "FILE"; // "FILE", "FOLDER", or "LNK"
 let activeId = null;
 
 const elOpList = document.getElementById("opList");
@@ -355,7 +473,10 @@ const panels = {
 };
 
 function getCurrentOps() {
-  return currentType === "FILE" ? FILE_OPS : FOLDER_OPS;
+  if (currentType === "FILE") return FILE_OPS;
+  if (currentType === "FOLDER") return FOLDER_OPS;
+  if (currentType === "LNK") return LNK_OPS;
+  return FILE_OPS;
 }
 
 function renderList(filter = "") {
