@@ -30,24 +30,6 @@
       position: relative;
     }
     
-    /* Particles Background Animation */
-    #particles-js {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.4;
-    }
-    
-    .content-wrapper {
-      position: relative;
-      z-index: 1;
-      background-color: var(--bg);
-    }
-    
     /* Header */
     header {
       padding: 2rem 1rem;
@@ -55,9 +37,34 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       position: sticky;
       top: 0;
-      background-color: var(--bg);
+      background-color: transparent;
       z-index: 100;
-      backdrop-filter: blur(10px);
+      overflow: hidden;
+      min-height: 150px;
+    }
+    
+    /* Particles Background Animation - Only in Header */
+    #particles-js {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    
+    header .logo,
+    header .tagline {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+      background-color: var(--bg);
     }
     
     .logo {
@@ -429,10 +436,9 @@
   </style>
 </head>
 <body>
-  <div id="particles-js"></div>
-  
   <div class="content-wrapper">
   <header>
+    <div id="particles-js"></div>
     <div class="logo">
       <span class="logo-part1">NTFS</span>
       <span class="logo-part2"> File Operations</span>
@@ -534,20 +540,20 @@
   <!-- particles.js library -->
   <script src="particles.min.js"></script>
   <script>
-    // Particles.js configuration - wait for DOM and library to load
-    document.addEventListener('DOMContentLoaded', function() {
+    // Particles.js configuration - only in header
+    window.addEventListener('load', function() {
       if (typeof particlesJS !== 'undefined') {
         particlesJS('particles-js', {
       "particles": {
         "number": {
-          "value": 50,
+          "value": 30,
           "density": {
             "enable": true,
             "value_area": 800
           }
         },
         "color": {
-          "value": "#ff8800"
+          "value": "#00ff00"
         },
         "shape": {
           "type": "circle",
@@ -579,8 +585,8 @@
         "line_linked": {
           "enable": true,
           "distance": 150,
-          "color": "#ff8800",
-          "opacity": 0.15,
+          "color": "#00ff00",
+          "opacity": 0.2,
           "width": 1
         },
         "move": {
