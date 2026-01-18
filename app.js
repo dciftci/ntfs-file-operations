@@ -1,7 +1,7 @@
 const FILE_OPS = [
   {
     id: "create-file",
-    name: "Create (new file)",
+    name: "Create file",
     useCase: "Payload drop in Temp, tool output (dump/log), staging files",
     bestArtifacts: "$J + $MFT",
     conclusion: "File creation activity happened around X; $MFT confirms file record + metadata",
@@ -26,7 +26,7 @@ const FILE_OPS = [
   },
   {
     id: "write-modify",
-    name: "Write / Modify (append or change content)",
+    name: "Write / Modify file",
     useCase: "Logging, config edits, building an archive gradually",
     bestArtifacts: "$J + $LogFile, validate with $MFT",
     conclusion: "Content was written/extended; $LogFile can show write sequencing, $J shows high-level change",
@@ -50,7 +50,7 @@ const FILE_OPS = [
   },
   {
     id: "overwrite",
-    name: "Overwrite (in-place replace content)",
+    name: "Overwrite file",
     useCase: "\"Clean-up\" by overwriting logs/artifacts without deleting",
     bestArtifacts: "$J + $LogFile",
     conclusion: "Strong evidence of content replacement (vs just metadata change)",
@@ -74,7 +74,7 @@ const FILE_OPS = [
   },
   {
     id: "truncate",
-    name: "Truncate (shrink to 0 / reduce size)",
+    name: "Truncate file",
     useCase: "Clearing a log while keeping the file name",
     bestArtifacts: "$J + $MFT (sometimes $LogFile)",
     conclusion: "File size reduction occurred; common \"log wiped\" pattern",
@@ -97,7 +97,7 @@ const FILE_OPS = [
   },
   {
     id: "rename",
-    name: "Rename",
+    name: "Rename file",
     useCase: "lsass.dmp → system.dat to hide; extension swaps",
     bestArtifacts: "$J + $MFT",
     conclusion: "Often recover old+new names (via $J), confirm final state (via $MFT)",
@@ -121,7 +121,7 @@ const FILE_OPS = [
   },
   {
     id: "move-same-volume",
-    name: "Move (same volume)",
+    name: "Move file",
     useCase: "Moving payload from obvious folder to obscure location",
     bestArtifacts: "$J + $MFT",
     conclusion: "Path relationship changed; great for timeline chaining with rename/create",
@@ -144,7 +144,7 @@ const FILE_OPS = [
   },
   {
     id: "copy",
-    name: "Copy",
+    name: "Copy file",
     useCase: "Toolkit copied into another directory",
     bestArtifacts: "$J + $MFT",
     conclusion: "Copy usually appears as create+write at destination; prove by correlation (source + destination timing)",
@@ -167,7 +167,7 @@ const FILE_OPS = [
   },
   {
     id: "delete",
-    name: "Delete",
+    name: "Delete file",
     useCase: "Post-execution cleanup",
     bestArtifacts: "$J + $MFT",
     conclusion: "Delete event time (if still in $J) + $MFT record marked unused",
@@ -190,7 +190,7 @@ const FILE_OPS = [
   },
   {
     id: "secure-delete",
-    name: "Secure-delete / wiping behavior",
+    name: "Secure-delete file",
     useCase: "Anti-forensics (multiple overwrites)",
     bestArtifacts: "$LogFile (+ $J when present)",
     conclusion: "Possible overwrite-heavy patterns; confirmation often needs free-space analysis/other telemetry",
@@ -215,7 +215,7 @@ const FILE_OPS = [
   },
   {
     id: "timestomp",
-    name: "Timestomp (timestamp manipulation)",
+    name: "Timestomp file",
     useCase: "Make file look old/new to mislead timeline",
     bestArtifacts: "$J / $LogFile vs $MFT",
     conclusion: "$MFT timestamps alone can lie; $J/$LogFile can show \"real activity time\"",
@@ -240,7 +240,7 @@ const FILE_OPS = [
   },
   {
     id: "metadata-only",
-    name: "Metadata-only change (attributes/permissions)",
+    name: "Metadata-only change file",
     useCase: "Hide file (hidden/system), restrict access",
     bestArtifacts: "$MFT + $J",
     conclusion: "Attribute/ACL changes can appear without content writes—useful for stealth/persistence narratives",
@@ -264,7 +264,7 @@ const FILE_OPS = [
   },
   {
     id: "ads-write",
-    name: "ADS write (alternate data stream)",
+    name: "ADS write file",
     useCase: "Hide payload in legit.txt:evil.bin",
     bestArtifacts: "$MFT + $J (sometimes $LogFile)",
     conclusion: "Evidence of stream presence/changes; good for \"hidden content\" staging",
