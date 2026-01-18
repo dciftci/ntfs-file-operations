@@ -535,8 +535,10 @@
   </div>
 
   <script>
-    // Particles.js configuration
-    particlesJS('particles-js', {
+    // Particles.js configuration - wait for DOM and library to load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof particlesJS !== 'undefined') {
+        particlesJS('particles-js', {
       "particles": {
         "number": {
           "value": 50,
@@ -623,6 +625,10 @@
         }
       },
       "retina_detect": true
+        });
+      } else {
+        console.error('particles.js library not loaded');
+      }
     });
   </script>
   <script src="app.js"></script>
