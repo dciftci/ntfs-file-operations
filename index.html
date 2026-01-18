@@ -61,24 +61,25 @@
     }
     
     /* Particles Background Animation - Sidebar */
+    .sidebar {
+      position: relative;
+    }
+    
     #particles-sidebar {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      z-index: 0;
       pointer-events: auto;
       opacity: 0.4;
     }
     
-    .sidebar {
-      position: relative;
-    }
-    
     .sidebar-section {
       position: relative;
-      z-index: 2;
+      z-index: 1;
+      background-color: rgba(0, 0, 0, 0.3);
       pointer-events: none;
     }
     
@@ -88,31 +89,34 @@
     .sidebar-section li,
     .sidebar-section h2,
     .sidebar-section p,
-    .sidebar-section a {
+    .sidebar-section a,
+    .sidebar-section > * {
       pointer-events: auto;
+      position: relative;
     }
     
     /* Particles Background Animation - Details */
+    #details {
+      position: relative;
+      pointer-events: none;
+    }
+    
     #particles-details {
       position: absolute;
       top: 0;
       right: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      z-index: 0;
       pointer-events: auto;
       opacity: 0.4;
     }
     
-    #details {
-      position: relative;
-      pointer-events: none;
-    }
-    
     #details > * {
       position: relative;
-      z-index: 2;
+      z-index: 1;
       pointer-events: auto;
+      background-color: rgba(0, 0, 0, 0.3);
     }
     
     .content-wrapper {
@@ -358,28 +362,26 @@
     .tab {
       padding: 0.75rem 1.5rem;
       background-color: #ffffff;
-      border: 1px solid #ffffff;
+      border: none;
       color: var(--bg);
       font-family: inherit;
       font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
-      box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+      box-shadow: none;
     }
     
     .tab:hover {
-      background-color: rgba(255, 255, 255, 0.9) !important;
-      border-color: #ffffff !important;
-      border: 1px solid #ffffff !important;
+      background-color: rgba(255, 255, 255, 0.9);
     }
     
     .tab.active {
       background-color: #ffffff;
       color: var(--bg);
-      border-color: var(--accent);
+      border: none;
       font-weight: bold;
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      box-shadow: none;
     }
     
     .tab::before {
