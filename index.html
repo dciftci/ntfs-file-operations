@@ -42,7 +42,7 @@
       min-height: 150px;
     }
     
-    /* Particles Background Animation - Only in Header */
+    /* Particles Background Animation - Header */
     #particles-js {
       position: absolute;
       top: 0;
@@ -56,6 +56,49 @@
     
     header .logo,
     header .tagline {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Particles Background Animation - Sidebar */
+    #particles-sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+    
+    .sidebar {
+      position: relative;
+    }
+    
+    .sidebar-section,
+    .sidebar-section > * {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Particles Background Animation - Details */
+    #particles-details {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+    
+    #details {
+      position: relative;
+    }
+    
+    #details > * {
       position: relative;
       z-index: 1;
     }
@@ -310,18 +353,20 @@
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
+      box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
     }
     
     .tab:hover {
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.9);
       border-color: var(--accent);
     }
     
     .tab.active {
-      background-color: var(--accent);
+      background-color: #ffffff;
       color: var(--bg);
       border-color: var(--accent);
       font-weight: bold;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     }
     
     .tab::before {
@@ -448,6 +493,7 @@
 
   <main>
     <aside class="sidebar">
+      <div id="particles-sidebar"></div>
       <section class="sidebar-section">
         <h2>Operations</h2>
         <div class="type-toggle-container">
@@ -476,6 +522,7 @@
       </div>
 
       <div id="details">
+        <div id="particles-details"></div>
         <div class="details-header">
           <h1 id="opTitle"></h1>
           <div class="details-meta">
@@ -647,6 +694,44 @@
         }
       },
       "retina_detect": true
+        });
+        
+        // Particles.js for sidebar
+        particlesJS('particles-sidebar', {
+          "particles": {
+            "number": { "value": 100, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": "#00ff00" },
+            "shape": { "type": "circle", "stroke": { "width": 0, "color": "#000000" } },
+            "opacity": { "value": 0.8, "random": true, "anim": { "enable": false } },
+            "size": { "value": 3, "random": true, "anim": { "enable": false } },
+            "line_linked": { "enable": true, "distance": 300, "color": "#00ff00", "opacity": 0.5, "width": 1 },
+            "move": { "enable": true, "speed": 4, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+          },
+          "interactivity": {
+            "detect_on": "canvas",
+            "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+            "modes": { "grab": { "distance": 400, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 8 } }
+          },
+          "retina_detect": true
+        });
+        
+        // Particles.js for details section
+        particlesJS('particles-details', {
+          "particles": {
+            "number": { "value": 100, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": "#00ff00" },
+            "shape": { "type": "circle", "stroke": { "width": 0, "color": "#000000" } },
+            "opacity": { "value": 0.8, "random": true, "anim": { "enable": false } },
+            "size": { "value": 3, "random": true, "anim": { "enable": false } },
+            "line_linked": { "enable": true, "distance": 300, "color": "#00ff00", "opacity": 0.5, "width": 1 },
+            "move": { "enable": true, "speed": 4, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+          },
+          "interactivity": {
+            "detect_on": "canvas",
+            "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+            "modes": { "grab": { "distance": 400, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 8 } }
+          },
+          "retina_detect": true
         });
       } else {
         console.error('particles.js library not loaded');
