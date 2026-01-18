@@ -148,9 +148,9 @@
     .type-toggle {
       flex: 1;
       padding: 0.5rem;
-      background-color: #ffffff;
-      border: 1px solid #ffffff;
-      color: var(--bg);
+      background-color: transparent;
+      border: 1px solid var(--accent);
+      color: var(--fg);
       font-family: inherit;
       font-size: 0.9rem;
       cursor: pointer;
@@ -158,14 +158,12 @@
     }
     
     .type-toggle:hover {
-      background-color: rgba(255, 255, 255, 0.8);
-      border-color: var(--accent);
+      background-color: rgba(0, 255, 0, 0.1);
     }
     
     .type-toggle.active {
       background-color: var(--accent);
       color: var(--bg);
-      border-color: var(--accent);
       font-weight: bold;
     }
     
@@ -298,15 +296,15 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-bottom: 2rem;
-      border-bottom: 1px solid var(--accent-tabs);
+      border-bottom: 1px solid var(--accent);
       padding-bottom: 1rem;
     }
     
     .tab {
       padding: 0.75rem 1.5rem;
-      background-color: transparent;
-      border: 1px solid var(--accent-tabs);
-      color: var(--fg);
+      background-color: #ffffff;
+      border: 1px solid #ffffff;
+      color: var(--bg);
       font-family: inherit;
       font-size: 0.9rem;
       cursor: pointer;
@@ -315,13 +313,14 @@
     }
     
     .tab:hover {
-      background-color: rgba(0, 255, 0, 0.1);
-      border-color: var(--accent-tabs);
+      background-color: rgba(255, 255, 255, 0.8);
+      border-color: var(--accent);
     }
     
     .tab.active {
-      background-color: var(--accent-tabs);
+      background-color: var(--accent);
       color: var(--bg);
+      border-color: var(--accent);
       font-weight: bold;
     }
     
