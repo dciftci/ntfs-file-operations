@@ -88,16 +88,20 @@ const FILE_OPS = [
     useCase: "lsass.dmp → system.dat to hide; extension swaps",
     bestArtifacts: "$J + $MFT",
     conclusion: "Often recover old+new names (via $J), confirm final state (via $MFT)",
+    commands: "C:\\Users\\deniz\\Desktop>ren \"%USERPROFILE%\\Desktop\\deniz.bat\" system.dat\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:56:52.98",
     mft: [
       "No MFT records found for this operation."
     ],
     usn: [
-      "Classic pair: RENAME_OLD_NAME and RENAME_NEW_NAME.",
-      "Often also BASIC_INFO_CHANGE."
+      "<strong>RenameNewName:</strong> The file was renamed to system.dat.",
+      "<strong>RenameNewName | Close:</strong> Rename operation completed and the handle was closed."
     ],
     log: [
-      "Transactional rename steps (metadata updates) may be visible."
-    ]
+      "<strong>Renaming File:</strong> NTFS updated the $FILE_NAME attribute (deniz.bat → system.dat).",
+      "<strong>Updating MFTModifiedTime:</strong> MFTModifiedTime was updated to 2026-01-31 14:56:52 (Update Resident Value)."
+    ],
+    usnImage: "images/filerename-j.png",
+    logImage: "images/filerename-logfile.png"
   },
   {
     id: "move-same-volume",
