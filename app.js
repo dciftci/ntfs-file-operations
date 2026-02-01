@@ -460,3 +460,4 @@ if (document.readyState === 'loading') {
 } else {
   setupLightbox();
 }
+test
