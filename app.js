@@ -222,15 +222,17 @@ const FILE_OPS = [
     useCase: "Hide file (hidden/system), restrict access",
     bestArtifacts: "$MFT + $J",
     conclusion: "Attribute/ACL changes can appear without content writes—useful for stealth/persistence narratives",
+    commands: "C:\\Users\\deniz\\Desktop>attrib +h +s \"%USERPROFILE%\\Desktop\\.cache.dat\"\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 15:19:58.79",
     mft: [
       "No MFT records found for this operation."
-    ],
     usn: [
-      "BASIC_INFO_CHANGE reason typically present.",
-      "May also show SECURITY_CHANGE if ACL modified."
+      "<strong>BasicInfoChange:</strong> File attributes were modified (Hidden/System flags set).",
+      "<strong>BasicInfoChange | Close:</strong> Metadata update completed and handle closed."
     ],
     log: [
-      "Transactional metadata updates visible if attributes/permissions changed."
+      "No $LogFile records found for this operation."
+    ],
+    usnImage: "images/filemetadata-j.png"
     ]
   },
   {
