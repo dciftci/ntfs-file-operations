@@ -132,16 +132,25 @@ const FILE_OPS = [
     useCase: "Toolkit copied into another directory",
     bestArtifacts: "$J + $MFT",
     conclusion: "Copy usually appears as create+write at destination; prove by correlation (source + destination timing)",
+    commands: "C:\\Users\\deniz\\Desktop>copy \"%USERPROFILE%\\Desktop\\.cache.dat\" \"%USERPROFILE%\\Desktop\\deniz_copy.bat\"\n        1 file(s) copied.\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:58:29.50",
     mft: [
-      "No MFT records found for this operation."
+      "<strong>New MFT Entry:</strong> Entry 153250 created for deniz_copy.bat.",
+      "<strong>CreatedTime:</strong> 2026-01-31 13:58:29 confirms a new file (not rename).",
+      "<strong>File Size:</strong> 13 bytes, matching the source file."
     ],
     usn: [
-      "Create event at destination; source file may show READ operations.",
-      "Multiple USN records if large file (chunked copy)."
+      "<strong>FileCreate:</strong> A new file (deniz_copy.bat) was created.",
+      "<strong>DataExtend | FileCreate:</strong> Data was written during creation.",
+      "<strong>DataOverwrite | DataExtend | FileCreate:</strong> Copied content was written into the new file.",
+      "<strong>BasicInfoChange:</strong> File metadata was updated."
     ],
     log: [
-      "Transaction records for destination file creation and data writes."
-    ]
+      "<strong>Writing Content of Resident File:</strong> 13 bytes written as resident data.",
+      "<strong>Time Reversal Event:</strong> Timestamps were adjusted to align with the source file."
+    ],
+    mftImage: "images/filecopy-mft.png",
+    usnImage: "images/filecopy-J.png",
+    logImage: "images/filecopy-logfile.png"
   },
   {
     id: "delete",
