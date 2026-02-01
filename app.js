@@ -109,15 +109,21 @@ const FILE_OPS = [
     useCase: "Moving payload from obvious folder to obscure location",
     bestArtifacts: "$J + $MFT",
     conclusion: "Path relationship changed; great for timeline chaining with rename/create",
+    commands: "C:\\Users\\deniz\\Desktop>move \"%USERPROFILE%\\Desktop\\system.dat\" \"%USERPROFILE%\\Desktop\\.cache.dat\"\n        1 file(s) moved.\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:57:54.19",
     mft: [
-      "No MFT records found for this operation."
+      "Same Entry Number (152529) confirms this is not a new file, only a rename.",
+      "CreatedTime stays 2026-01-31 13:52:18, proving the file was originally created earlier."
     ],
     usn: [
-      "Often manifests similarly to rename (old name/new name) with directory context change."
+      "<strong>RenameOldName:</strong> The old filename (system.dat) was removed from the directory index.",
+      "<strong>RenameNewName:</strong> The same MFT entry was linked with the new name (.cache.dat).",
+      "<strong>RenameNewName | Close:</strong> Rename completed and the handle was closed."
     ],
     log: [
-      "Transactional metadata update steps may appear."
-    ]
+      "<strong>Updating MFTModifiedTime:</strong> MFTModifiedTime updated to 14:57:52 due to $FILE_NAME attribute change."
+    ],
+    usnImage: "images/filemove-J.png",
+    logImage: "images/filemove-logfile.png"
   },
   {
     id: "copy",
@@ -460,4 +466,3 @@ if (document.readyState === 'loading') {
 } else {
   setupLightbox();
 }
-test
