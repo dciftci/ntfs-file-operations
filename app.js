@@ -203,6 +203,7 @@ const FILE_OPS = [
     useCase: "Make file look old/new to mislead timeline",
     bestArtifacts: "$J / $LogFile vs $MFT",
     conclusion: "$MFT timestamps alone can lie; $J/$LogFile can show \"real activity time\"",
+    commands: "PS C:\\Users\\deniz> (Get-Item \"$env:USERPROFILE\\Desktop\\.cache.dat\").LastWriteTime=\"01/01/2019 10:00\"\nPS C:\\Users\\deniz> Write-Host \"[TIME]\" (Get-Date)\n[TIME] 1/31/2026 3:18:45 PM",
     mft: [
       "No MFT records found for this operation."
     ],
