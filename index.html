@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+	<head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NTFS File Operations — $MFT / $J / $LogFile</title>
-  <style>
+		<title>NTFS File Operations — $MFT / $J / $LogFile</title>
+		<style>
     * {
       margin: 0;
       padding: 0;
@@ -185,7 +185,7 @@
       flex-direction: column;
     }
     
-    #opList {
+			#opList {
       flex: 1;
       padding-right: 0.5rem;
     }
@@ -248,44 +248,44 @@
     }
     
     
-    .op-item {
+			.op-item {
       padding: 0.75rem;
-      margin: 0.5rem 0;
-      cursor: pointer;
+				margin: 0.5rem 0;
+				cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.2s;
-    }
+			}
     
-    .op-item:hover {
+			.op-item:hover {
       border-color: var(--accent);
       background-color: rgba(0, 255, 0, 0.05);
-    }
+			}
     
-    .op-item.active {
+			.op-item.active {
       border-color: var(--accent);
       background-color: rgba(0, 255, 0, 0.1);
-    }
+			}
     
-    .op-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
+			.op-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 0.5rem;
+			}
     
-    .op-name {
-      font-weight: bold;
+			.op-name {
+				font-weight: bold;
       font-size: 1rem;
-    }
+			}
     
-    .op-tag {
-      font-size: 0.75rem;
-      padding: 0.2rem 0.5rem;
+			.op-tag {
+				font-size: 0.75rem;
+				padding: 0.2rem 0.5rem;
       border: 1px solid var(--accent);
       color: var(--accent);
-    }
+			}
     
-    .op-desc {
+			.op-desc {
       font-size: 0.85rem;
       color: var(--fg-muted);
     }
@@ -332,7 +332,7 @@
     
     .details-meta-row {
       margin: 0.75rem 0;
-      padding: 0.75rem;
+				padding: 0.75rem;
       border: 1px solid var(--accent);
       background-color: rgba(0, 255, 0, 0.02);
     }
@@ -345,38 +345,38 @@
     }
     
     .details-meta-value {
-      color: var(--fg-muted);
+      color: var(--fg);
       font-size: 0.9rem;
     }
     
     /* Tabs - Now checkboxes for multi-select */
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+			.tabs {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
       margin-bottom: 2rem;
       border-bottom: 1px solid var(--accent);
-      padding-bottom: 1rem;
-    }
+				padding-bottom: 1rem;
+			}
     
-    .tab {
+			.tab {
       padding: 0.75rem 1.5rem;
       background-color: #ffffff;
       border: none;
       color: var(--bg);
       font-family: inherit;
       font-size: 0.9rem;
-      cursor: pointer;
+				cursor: pointer;
       transition: all 0.2s;
       position: relative;
       box-shadow: none;
-    }
+			}
     
-    .tab:hover {
+			.tab:hover {
       background-color: rgba(255, 255, 255, 0.9);
-    }
+			}
     
-    .tab.active {
+			.tab.active {
       background-color: #ffffff;
       color: var(--bg);
       border: none;
@@ -394,14 +394,14 @@
     }
     
     /* Panels - Stacked when multiple selected */
-    .panel {
-      display: none;
+			.panel {
+				display: none;
       margin-bottom: 2rem;
-    }
+			}
     
-    .panel.active {
-      display: block;
-    }
+			.panel.active {
+				display: block;
+			}
     
     .panels-container {
       display: flex;
@@ -422,15 +422,147 @@
       margin-top: 0;
     }
     
-    .panel ul {
-      margin-left: 1.5rem;
-      margin-bottom: 1.5rem;
+    .screenshot-container {
+      margin: 1rem 0;
     }
     
-    .panel li {
+    .screenshot {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .screenshot:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 255, 128, 0.3);
+    }
+    
+    .commands-container {
+      margin-top: 1rem;
+    }
+    
+    .commands-container pre {
+      background-color: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--accent);
+      border-left: 4px solid var(--accent);
+      padding: 1.5rem;
+      margin: 0.5rem 0 0 0;
+      font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+      font-size: 0.9rem;
+      color: var(--fg);
+      white-space: pre-wrap;
+      overflow-x: auto;
+      border-radius: 4px;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+      line-height: 1.6;
+    }
+    
+    .commands-container pre code {
+      color: var(--fg);
+      font-family: inherit;
+    }
+    
+    .panel .screenshot-container {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    
+    .panel .screenshot {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .panel .screenshot:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+    }
+    
+    /* Lightbox Modal */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.95);
+      overflow: auto;
+      animation: fadeIn 0.3s;
+    }
+    
+    .lightbox-modal.active {
+				display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .lightbox-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 90%;
+      margin: auto;
+      animation: zoomIn 0.3s;
+    }
+    
+    .lightbox-content img {
+      max-width: 100%;
+      max-height: 90vh;
+      height: auto;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+    }
+    
+    .lightbox-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: var(--accent);
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+				text-align: center;
+      transition: color 0.2s;
+    }
+    
+    .lightbox-close:hover {
+      color: var(--fg);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes zoomIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+			.panel ul {
+				margin-left: 1.5rem;
+      margin-bottom: 1.5rem;
+			}
+    
+			.panel li {
       margin: 0.75rem 0;
       line-height: 1.8;
-      color: var(--fg-muted);
+      color: var(--fg);
     }
     
     /* Footer */
@@ -497,7 +629,7 @@
 </head>
 <body>
   <div class="content-wrapper">
-  <header>
+											<header>
     <div id="particles-js"></div>
     <div class="logo">
       <span class="logo-part1">NTFS</span>
@@ -510,31 +642,31 @@
     <aside class="sidebar">
       <div id="particles-sidebar"></div>
       <section class="sidebar-section">
-        <h2>Operations</h2>
+												<h2>Operations</h2>
         <div class="type-toggle-container">
           <button class="type-toggle active" data-type="FILE">FILE</button>
           <button class="type-toggle" data-type="FOLDER">FOLDER</button>
         </div>
-        <input type="text" id="searchBox" placeholder="Search operations..." />
+											<input type="text" id="searchBox" placeholder="Search operations..." />
         <ul id="opList"></ul>
-      </section>
+										</section>
       <section class="sidebar-section">
-        <h2>About</h2>
+												<h2>About</h2>
         <p style="color: var(--fg-muted); font-size: 0.9rem; line-height: 1.6;">
           This interactive guide shows how file operations appear in NTFS artifacts: <strong style="color: var(--accent);">$MFT</strong>, <strong style="color: var(--accent);">$J (USN Journal)</strong>, and <strong style="color: var(--accent);">$LogFile</strong>.
         </p>
         <p style="color: var(--fg-muted); font-size: 0.9rem; margin-top: 1rem;">
           Click an operation to view detailed artifact signals, API patterns, and common pitfalls.
         </p>
-      </section>
+										</section>
     </aside>
 
     <section class="content">
-      <div id="emptyState" class="empty-state">
-        <h2>Select an Operation</h2>
+											<div id="emptyState" class="empty-state">
+												<h2>Select an Operation</h2>
         <p>Choose a file operation from the sidebar to see how it appears in <strong style="color: var(--accent);">$MFT</strong>, <strong style="color: var(--accent);">$J</strong>, and <strong style="color: var(--accent);">$LogFile</strong>.</p>
         <p style="margin-top: 1rem;"><em>Example: Click "Create File" to view artifact details</em></p>
-      </div>
+											</div>
 
       <div id="details">
         <div id="particles-details"></div>
@@ -545,27 +677,35 @@
               <div class="details-meta-label">Typical DFIR / attacker use-case</div>
               <div class="details-meta-value" id="opUseCase"></div>
             </div>
-          </div>
             <div id="opCommands" class="commands-container" style="display: none;">
               <div class="details-meta-label" style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Executed Commands</div>
               <pre><code></code></pre>
             </div>
+          </div>
         </div>
 
-        <div class="tabs">
-          <button class="tab active" data-tab="mft">$MFT</button>
+												<div class="tabs">
+													<button class="tab active" data-tab="mft">$MFT</button>
           <button class="tab active" data-tab="usn">$J (USN)</button>
           <button class="tab active" data-tab="log">$LogFile</button>
-        </div>
+												</div>
 
         <div class="panels-container">
-          <div class="panel active" id="panel-mft"></div>
+												<div class="panel active" id="panel-mft"></div>
           <div class="panel active" id="panel-usn"></div>
           <div class="panel active" id="panel-log"></div>
-        </div>
-      </div>
-    </section>
+						</div>
+					</div>
+				</section>
   </main>
+
+  <!-- Lightbox Modal -->
+  <div id="lightboxModal" class="lightbox-modal">
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightboxClose">&times;</button>
+      <img id="lightboxImage" src="" alt="Enlarged Screenshot">
+						</div>
+					</div>
 
   <footer>
     <div class="social-icons">
@@ -599,7 +739,7 @@
       <a href="#">Terms & Conditions</a>
     </div>
   </footer>
-  </div>
+		</div>
 
   <!-- particles.js library -->
   <script src="particles.min.js"></script>
@@ -755,6 +895,6 @@
       }
     });
   </script>
-  <script src="app.js"></script>
-</body>
+			<script src="app.js"></script>
+	</body>
 </html>

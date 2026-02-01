@@ -68,17 +68,19 @@ const FILE_OPS = [
     useCase: "Clearing a log while keeping the file name",
     bestArtifacts: "$J + $MFT (sometimes $LogFile)",
     conclusion: "File size reduction occurred; common \"log wiped\" pattern",
+    commands: "# It zeros out the contents of the file.\nC:\\Users\\deniz\\Desktop>fsutil file setZeroData offset=0 length=999999999 \"%USERPROFILE%\\Desktop\\deniz.bat\"\nZero data is changed\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:55:51.06",
     mft: [
-      "File size decreases; SI Modified time updates.",
-      "Allocation size may not immediately drop to 0 depending on behavior."
+      "No MFT records found for this operation."
     ],
     usn: [
-      "Common reason: DATA_TRUNCATION; often followed by BASIC_INFO_CHANGE.",
-      "If file is immediately re-written, you'll see DATA_EXTEND after truncation."
+      "<strong>USN – DataOverwrite:</strong> Existing file content was overwritten without extending the file size.",
+      "<strong>USN – DataOverwrite | Close:</strong> Overwrite completed and the file handle was closed."
     ],
     log: [
-      "Transactional steps around size change and potential deallocation behavior."
+      "<strong>$LogFile – Updating Modified Time:</strong> ModifiedTime was updated from 14:54:45 to 14:55:51 due to the truncate/overwrite operation (Update Resident Value)."
     ],
+    usnImage: "images/truncate-j.png",
+    logImage: "images/truncate-logfile.png"
   },
   {
     id: "rename",
@@ -87,8 +89,7 @@ const FILE_OPS = [
     bestArtifacts: "$J + $MFT",
     conclusion: "Often recover old+new names (via $J), confirm final state (via $MFT)",
     mft: [
-      "$FILE_NAME attribute updated (directory entry/name).",
-      "SI timestamps may update (often Changed time)."
+      "No MFT records found for this operation."
     ],
     usn: [
       "Classic pair: RENAME_OLD_NAME and RENAME_NEW_NAME.",
@@ -96,7 +97,7 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional rename steps (metadata updates) may be visible."
-    ],
+    ]
   },
   {
     id: "move-same-volume",
@@ -105,15 +106,14 @@ const FILE_OPS = [
     bestArtifacts: "$J + $MFT",
     conclusion: "Path relationship changed; great for timeline chaining with rename/create",
     mft: [
-      "Filename/path relationship changes (FN attribute reflects directory entry).",
-      "MFT record usually remains the same."
+      "No MFT records found for this operation."
     ],
     usn: [
       "Often manifests similarly to rename (old name/new name) with directory context change."
     ],
     log: [
       "Transactional metadata update steps may appear."
-    ],
+    ]
   },
   {
     id: "copy",
@@ -122,8 +122,7 @@ const FILE_OPS = [
     bestArtifacts: "$J + $MFT",
     conclusion: "Copy usually appears as create+write at destination; prove by correlation (source + destination timing)",
     mft: [
-      "New MFT record at destination; original file's MFT record unchanged.",
-      "Both source and destination timestamps visible if correlated."
+      "No MFT records found for this operation."
     ],
     usn: [
       "Create event at destination; source file may show READ operations.",
@@ -131,7 +130,7 @@ const FILE_OPS = [
     ],
     log: [
       "Transaction records for destination file creation and data writes."
-    ],
+    ]
   },
   {
     id: "delete",
@@ -140,15 +139,14 @@ const FILE_OPS = [
     bestArtifacts: "$J + $MFT",
     conclusion: "Delete event time (if still in $J) + $MFT record marked unused",
     mft: [
-      "MFT record may be marked unused; filename attributes may persist until reused.",
-      "Recovery feasibility depends on reuse/overwrite."
+      "No MFT records found for this operation."
     ],
     usn: [
       "Common reason: FILE_DELETE (and sometimes CLOSE)."
     ],
     log: [
       "Transactional steps around unlinking/metadata update may appear."
-    ],
+    ]
   },
   {
     id: "secure-delete",
@@ -157,8 +155,7 @@ const FILE_OPS = [
     bestArtifacts: "$LogFile (+ $J when present)",
     conclusion: "Possible overwrite-heavy patterns; confirmation often needs free-space analysis/other telemetry",
     mft: [
-      "May show multiple Modified time changes if not timestomped.",
-      "File size may remain but content overwritten multiple times."
+      "No MFT records found for this operation."
     ],
     usn: [
       "Multiple DATA_OVERWRITE events in short time period.",
@@ -167,7 +164,7 @@ const FILE_OPS = [
     log: [
       "Multiple overwrite transactions visible if $LogFile retention allows.",
       "Strongest indicator of intentional content destruction."
-    ],
+    ]
   },
   {
     id: "timestomp",
@@ -176,8 +173,7 @@ const FILE_OPS = [
     bestArtifacts: "$J / $LogFile vs $MFT",
     conclusion: "$MFT timestamps alone can lie; $J/$LogFile can show \"real activity time\"",
     mft: [
-      "SI timestamps may show manipulated values (old or future dates).",
-      "FN timestamps may still reflect real creation time if not explicitly changed."
+      "No MFT records found for this operation."
     ],
     usn: [
       "$J timestamps reflect real activity time (not easily manipulated without admin privileges).",
@@ -186,7 +182,7 @@ const FILE_OPS = [
     log: [
       "$LogFile transaction timestamps show real system time of operations.",
       "Compare with $MFT to identify timestamp manipulation."
-    ],
+    ]
   },
   {
     id: "metadata-only",
@@ -195,8 +191,7 @@ const FILE_OPS = [
     bestArtifacts: "$MFT + $J",
     conclusion: "Attribute/ACL changes can appear without content writes—useful for stealth/persistence narratives",
     mft: [
-      "SI attributes field changes (hidden, system, archive flags).",
-      "Security descriptor may change if permissions modified."
+      "No MFT records found for this operation."
     ],
     usn: [
       "BASIC_INFO_CHANGE reason typically present.",
@@ -204,7 +199,7 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional metadata updates visible if attributes/permissions changed."
-    ],
+    ]
   },
   {
     id: "ads-write",
@@ -213,8 +208,7 @@ const FILE_OPS = [
     bestArtifacts: "$MFT + $J (sometimes $LogFile)",
     conclusion: "Evidence of stream presence/changes; good for \"hidden content\" staging",
     mft: [
-      "$DATA attribute entries for named streams visible in MFT record.",
-      "Main file data and ADS data shown as separate $DATA attributes."
+      "No MFT records found for this operation."
     ],
     usn: [
       "Stream creation/write may generate USN records with stream name.",
@@ -222,144 +216,17 @@ const FILE_OPS = [
     ],
     log: [
       "Transactional records for stream attribute creation and data writes."
-    ],
+    ]
   }
 ];
 
-const FOLDER_OPS = [
-  {
-    id: "create-folder",
-    name: "Create folder",
-    useCase: "Create staging dir: C:\\ProgramData\\Intel\\Cache\\",
-    bestArtifacts: "$J + $MFT",
-    conclusion: "Folder creation happened around X; helps explain later file drops",
-    mft: [
-      "New MFT record allocated for directory; $INDEX_ROOT and/or $INDEX_ALLOCATION present.",
-      "SI timestamps set (Created/Modified/Changed).",
-      "Directory entry appears in parent directory's index."
-    ],
-    usn: [
-      "USN record includes: USN_REASON_FILE_CREATE for the directory.",
-      "Parent directory may show INDEX_CHANGE event."
-    ],
-    log: [
-      "Transaction activity for directory record allocation and index updates."
-    ],
-  },
-  {
-    id: "rename-folder",
-    name: "Rename folder",
-    useCase: "Rename staging dir after use to look benign",
-    bestArtifacts: "$J + $MFT",
-    conclusion: "Old/new folder names often visible via $J; $MFT confirms final state",
-    mft: [
-      "$FILE_NAME attribute updated in directory's MFT record.",
-      "SI Changed time typically updates.",
-      "Parent directory's index updated with new name."
-    ],
-    usn: [
-      "RENAME_OLD_NAME and RENAME_NEW_NAME reasons for the directory.",
-      "Parent directory may show INDEX_CHANGE."
-    ],
-    log: [
-      "Transactional rename steps for directory metadata updates."
-    ],
-  },
-  {
-    id: "move-folder",
-    name: "Move folder (same volume)",
-    useCase: "Move entire toolkit to a different path",
-    bestArtifacts: "$J + $MFT",
-    conclusion: "Directory relocation evidence; supports \"toolkit moved then executed\" story",
-    mft: [
-      "Directory's FN attribute shows new parent path.",
-      "MFT record usually remains the same (same volume move).",
-      "Both old and new parent directories' indexes updated."
-    ],
-    usn: [
-      "RENAME events showing old/new paths for directory.",
-      "Multiple INDEX_CHANGE events in old/new parent directories."
-    ],
-    log: [
-      "Transactional steps for directory relocation and index updates."
-    ],
-  },
-  {
-    id: "delete-folder",
-    name: "Delete folder",
-    useCase: "Cleanup after exfil/tool execution",
-    bestArtifacts: "$J + $MFT",
-    conclusion: "Folder deletion timing (if in $J) + MFT record state change",
-    mft: [
-      "Directory MFT record marked unused (if not recycled yet).",
-      "Parent directory's index updated (directory entry removed).",
-      "Child files/directories may remain until explicitly deleted."
-    ],
-    usn: [
-      "FILE_DELETE reason for the directory.",
-      "Parent directory shows INDEX_CHANGE event."
-    ],
-    log: [
-      "Transactional steps around directory unlinking and index updates."
-    ],
-  },
-  {
-    id: "permission-folder",
-    name: "Permission/ACL change on folder",
-    useCase: "Block access, persistence via restricted dirs",
-    bestArtifacts: "$MFT + $J",
-    conclusion: "Shows security/attribute changes affecting many child files indirectly",
-    mft: [
-      "Directory's security descriptor modified in $STANDARD_INFORMATION.",
-      "Access permissions, ownership, or audit settings changed."
-    ],
-    usn: [
-      "SECURITY_CHANGE or BASIC_INFO_CHANGE reason for directory.",
-      "May affect child files' effective permissions."
-    ],
-    log: [
-      "Transactional security descriptor updates for directory."
-    ],
-  },
-  {
-    id: "hide-folder",
-    name: "Hide folder (attributes)",
-    useCase: "Mark as hidden/system to reduce visibility",
-    bestArtifacts: "$MFT + $J",
-    conclusion: "Attribute change evidence even if no file content changes",
-    mft: [
-      "SI attributes field updated (hidden, system flags set).",
-      "Directory still accessible but less visible in normal listings."
-    ],
-    usn: [
-      "BASIC_INFO_CHANGE reason for directory.",
-      "Attribute modification timestamp updated."
-    ],
-    log: [
-      "Transactional metadata update for attribute changes."
-    ],
-  }
-];
+const FOLDER_OPS = [];
 
-
-let currentType = "FILE"; // "FILE" or "FOLDER"
+let currentType = "FILE"; // "FILE", "FOLDER", or "LNK"
 let activeId = null;
 
-const elOpList = document.getElementById("opList");
-const elSearch = document.getElementById("searchBox");
-const elTypeToggle = document.getElementById("typeToggle");
-
-const elEmpty = document.getElementById("emptyState");
-const elDetails = document.getElementById("details");
-const elTitle = document.getElementById("opTitle");
-const elUseCase = document.getElementById("opUseCase");
-const elCommands = document.getElementById("opCommands");
-
-const panels = {
-  mft: document.getElementById("panel-mft"),
-  usn: document.getElementById("panel-usn"),
-  log: document.getElementById("panel-log")
-};
+let elOpList, elSearch, elTypeToggle, elEmpty, elDetails, elTitle, elUseCase, elCommands;
+let panels;
 
 function getCurrentOps() {
   if (currentType === "FILE") return FILE_OPS;
@@ -368,6 +235,7 @@ function getCurrentOps() {
 }
 
 function renderList(filter = "") {
+  if (!elOpList) return;
   elOpList.innerHTML = "";
   const q = filter.trim().toLowerCase();
   const ops = getCurrentOps();
@@ -407,14 +275,23 @@ function listToHtml(title, arr, screenshot = null, altText = "Screenshot") {
 }
 
 function showDetails(id) {
+  if (!elDetails || !elTitle || !elUseCase || !elCommands || !panels || !panels.mft || !panels.usn || !panels.log) {
+    console.error("Elements not initialized!");
+    return;
+  }
+  
   const ops = getCurrentOps();
   const op = ops.find(o => o.id === id);
   if (!op) return;
 
   activeId = id;
-  renderList(elSearch.value);
+  if (elSearch) {
+    renderList(elSearch.value);
+  } else {
+    renderList("");
+  }
 
-  elEmpty.style.display = "none";
+  if (elEmpty) elEmpty.style.display = "none";
   elDetails.style.display = "block";
   elDetails.classList.add("active");
 
@@ -425,16 +302,16 @@ function showDetails(id) {
   elUseCase.textContent = op.useCase;
 
   // Display commands once at the top if they exist
-  if (op.commands && elCommands) {
+  if (op.commands) {
     const codeElement = elCommands.querySelector('code');
     if (codeElement) {
-      // Make only the [TIME] output line bold
+      // Make only the [TIME] output line bold (the line that starts with [TIME] and contains date/time)
       const formattedCommands = op.commands.replace(/^(\[TIME\] [^\n]+)$/gm, '<strong>$1</strong>');
       codeElement.innerHTML = formattedCommands;
     }
-    elCommands.style.display = 'block';
-  } else if (elCommands) {
-    elCommands.style.display = 'none';
+    elCommands.style.display = "block";
+  } else {
+    elCommands.style.display = "none";
   }
 
   panels.mft.innerHTML = listToHtml("$MFT", op.mft || []);
@@ -487,23 +364,95 @@ function switchType(type) {
 }
 
 // Wait for DOM to be ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() {
-    setupTabs();
-    renderList();
-  });
-} else {
+function init() {
+  // Initialize element references
+  elOpList = document.getElementById("opList");
+  elSearch = document.getElementById("searchBox");
+  elTypeToggle = document.getElementById("typeToggle");
+  elEmpty = document.getElementById("emptyState");
+  elDetails = document.getElementById("details");
+  elTitle = document.getElementById("opTitle");
+  elUseCase = document.getElementById("opUseCase");
+  elCommands = document.getElementById("opCommands");
+  
+  panels = {
+    mft: document.getElementById("panel-mft"),
+    usn: document.getElementById("panel-usn"),
+    log: document.getElementById("panel-log")
+  };
+  
+  // Check if all elements exist
+  if (!elOpList || !elDetails || !panels || !panels.mft || !panels.usn || !panels.log) {
+    console.error("Missing critical elements:", { elOpList, elDetails, panels });
+    return;
+  }
+  
   setupTabs();
   renderList();
-}
-
-if (elSearch) {
-  elSearch.addEventListener("input", () => renderList(elSearch.value));
-}
-
-// Setup type toggle buttons
-document.querySelectorAll(".type-toggle").forEach(btn => {
-  btn.addEventListener("click", () => {
-    switchType(btn.dataset.type);
+  
+  if (elSearch) {
+    elSearch.addEventListener("input", () => renderList(elSearch.value));
+  }
+  
+  // Setup type toggle buttons
+  document.querySelectorAll(".type-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      switchType(btn.dataset.type);
+    });
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+// Lightbox functionality
+function setupLightbox() {
+  const modal = document.getElementById("lightboxModal");
+  const lightboxImage = document.getElementById("lightboxImage");
+  const closeBtn = document.getElementById("lightboxClose");
+  
+  // Open lightbox when screenshot is clicked
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("screenshot")) {
+      lightboxImage.src = e.target.src;
+      lightboxImage.alt = e.target.alt;
+      modal.classList.add("active");
+      document.body.style.overflow = "hidden"; // Prevent background scrolling
+    }
+  });
+  
+  // Close lightbox
+  function closeLightbox() {
+    modal.classList.remove("active");
+    document.body.style.overflow = ""; // Restore scrolling
+  }
+  
+  // Close on button click
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeLightbox);
+  }
+  
+  // Close on background click
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeLightbox();
+    }
+  });
+  
+  // Close on ESC key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("active")) {
+      closeLightbox();
+    }
+  });
+}
+
+// Initialize lightbox when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupLightbox);
+} else {
+  setupLightbox();
+}
