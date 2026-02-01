@@ -173,23 +173,31 @@ const FILE_OPS = [
     logImage: "images/filedeletion-logfile.png"
   },
   {
+  {
     id: "secure-delete",
     name: "Secure-delete file",
     useCase: "Anti-forensics (multiple overwrites)",
     bestArtifacts: "$LogFile (+ $J when present)",
-    conclusion: "Possible overwrite-heavy patterns; confirmation often needs free-space analysis/other telemetry",
+    conclusion: "File was actively overwritten multiple times (not a simple delete). Repeated rename + overwrite is SDelete-specific behavior. NTFS metadata activity clearly distinguishes secure delete vs normal delete.",
+    commands: "C:\\Users\\deniz\\Downloads\\SDelete>sdelete64 -p 3 \"%USERPROFILE%\\Desktop\\test.bat\"\n\nSDelete v2.05 - Secure file delete\nCopyright (C) 1999-2023 Mark Russinovich\nSysinternals - www.sysinternals.com\n\nSDelete is set for 3 passes.\nC:\\Users\\deniz\\Desktop\\test.bat...deleted.\n\nFiles deleted: 1\n\nC:\\Users\\deniz\\Downloads\\SDelete>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 15:02:00.13",
     mft: [
       "No MFT records found for this operation."
     ],
     usn: [
-      "Multiple DATA_OVERWRITE events in short time period.",
-      "May also show delete after overwrite sequence."
+      "<strong>DataOverwrite:</strong> File content was overwritten (pass-based wiping started).",
+      "<strong>DataOverwrite | Close:</strong> Overwrite pass completed and the file handle was closed.",
+      "<strong>RenameOldName:</strong> Original filename was removed from the directory index (temporary rename during secure delete)."
     ],
     log: [
-      "Multiple overwrite transactions visible if $LogFile retention allows.",
-      "Strongest indicator of intentional content destruction."
-    ]
+      "<strong>Renaming File:</strong> NTFS renamed the file (test.bat → AAAA.AAA → BBBB.BBB → … → ZZZZ.ZZZ) as part of the secure delete process.",
+      "<strong>Updating Modified Time:</strong> ModifiedTime was repeatedly updated due to overwrite passes.",
+      "<strong>Move (Before) / Move (After):</strong> NTFS internally moved/updated filename attributes during rename cycles.",
+      "<strong>Create Attribute / Delete Attribute:</strong> $FILE_NAME attributes were created and removed multiple times during wiping."
+    ],
+    usnImage: "images/filesecuredelete-j.png",
+    logImage: "images/filesecuredelete-logfile.png"
   },
+
   {
     id: "timestomp",
     name: "Timestomp file",
