@@ -173,7 +173,6 @@ const FILE_OPS = [
     logImage: "images/filedeletion-logfile.png"
   },
   {
-  {
     id: "secure-delete",
     name: "Secure-delete file",
     useCase: "Anti-forensics (multiple overwrites)",
