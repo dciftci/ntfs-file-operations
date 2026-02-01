@@ -73,8 +73,8 @@ const FILE_OPS = [
       "No MFT records found for this operation."
     ],
     usn: [
-      "<strong>USN – DataOverwrite:</strong> Existing file content was overwritten without extending the file size.",
-      "<strong>USN – DataOverwrite | Close:</strong> Overwrite completed and the file handle was closed."
+      "<strong>DataOverwrite:</strong> Existing file content was overwritten without extending the file size.",
+      "<strong>DataOverwrite | Close:</strong> Overwrite completed and the file handle was closed."
     ],
     log: [
       "<strong>$LogFile – Updating Modified Time:</strong> ModifiedTime was updated from 14:54:45 to 14:55:51 due to the truncate/overwrite operation (Update Resident Value)."
