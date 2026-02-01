@@ -236,7 +236,6 @@ const FILE_OPS = [
     usnImage: "images/filemetadata-j.png"
   },
   {
-  {
     id: "ads-write",
     name: "ADS write file",
     useCase: "Hide payload in legit.txt:evil.bin",
