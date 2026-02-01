@@ -225,6 +225,7 @@ const FILE_OPS = [
     commands: "C:\\Users\\deniz\\Desktop>attrib +h +s \"%USERPROFILE%\\Desktop\\.cache.dat\"\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 15:19:58.79",
     mft: [
       "No MFT records found for this operation."
+    ],
     usn: [
       "<strong>BasicInfoChange:</strong> File attributes were modified (Hidden/System flags set).",
       "<strong>BasicInfoChange | Close:</strong> Metadata update completed and handle closed."
@@ -233,7 +234,6 @@ const FILE_OPS = [
       "No $LogFile records found for this operation."
     ],
     usnImage: "images/filemetadata-j.png"
-    ]
   },
   {
     id: "ads-write",
