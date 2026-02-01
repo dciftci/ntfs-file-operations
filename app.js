@@ -32,8 +32,8 @@ const FILE_OPS = [
       "No MFT records found for this operation."
     ],
     usn: [
-      "<strong>USN – DataExtend:</strong> Additional data was written to an existing file (file size increased).",
-      "<strong>USN – DataExtend | Close:</strong> Final data write completed and the file handle was closed."
+      "<strong>DataExtend:</strong> Additional data was written to an existing file (file size increased).",
+      "<strong>DataExtend | Close:</strong> Final data write completed and the file handle was closed."
     ],
     log: [
       "<strong>$LogFile – Updating Modified Time:</strong> NTFS updated the file's ModifiedTime from 14:52:18 to 14:53:23 due to the write operation (Update Resident Value)."
