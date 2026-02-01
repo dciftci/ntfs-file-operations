@@ -122,6 +122,7 @@ const FILE_OPS = [
     log: [
       "<strong>Updating MFTModifiedTime:</strong> MFTModifiedTime updated to 14:57:52 due to $FILE_NAME attribute change."
     ],
+    mftImage: "images/filemove-mft.png",
     usnImage: "images/filemove-J.png",
     logImage: "images/filemove-logfile.png"
   },
@@ -324,7 +325,7 @@ function showDetails(id) {
     elCommands.style.display = "none";
   }
 
-  panels.mft.innerHTML = listToHtml("$MFT", op.mft || []);
+  panels.mft.innerHTML = listToHtml("$MFT", op.mft || [], op.mftImage, "$MFT Screenshot");
   panels.usn.innerHTML = listToHtml("$J (USN)", op.usn || [], op.usnImage, "USN Journal Screenshot");
   panels.log.innerHTML = listToHtml("$LogFile", op.log || [], op.logImage, "$LogFile Screenshot");
 
