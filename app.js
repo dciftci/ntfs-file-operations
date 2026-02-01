@@ -5,24 +5,21 @@ const FILE_OPS = [
     useCase: "Payload drop in Temp, tool output (dump/log), staging files",
     bestArtifacts: "$J + $MFT",
     conclusion: "File creation activity happened around X; $MFT confirms file record + metadata",
+    commands: "C:\\Users\\deniz\\Desktop>echo @echo off > %USERPROFILE%\\Desktop\\deniz.bat\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:52:18.07",
     mft: [
-      "New MFT record allocated; $STANDARD_INFORMATION (SI) + $FILE_NAME (FN) attributes present.",
-      "SI timestamps set (Created/Modified/Changed). FN timestamps may reflect directory entry creation.",
-      "$DATA attribute appears (resident or non-resident depending on size)."
+      "No MFT records found for this operation."
     ],
     usn: [
-      "USN record commonly includes: USN_REASON_FILE_CREATE (+ often BASIC_INFO_CHANGE).",
-      "Follow-up USN entries usually appear quickly for initial writes (DATA_EXTEND / DATA_OVERWRITE)."
+      "<strong>FileCreate:</strong> NTFS created the file entry (metadata only, no data yet).",
+      "<strong>DataExtend | FileCreate:</strong> Data was written to the file while it was being created.",
+      "<strong>DataExtend | FileCreate | Close:</strong> Final write finished and the file handle was closed."
     ],
     log: [
-      "Transaction activity for record allocation + attribute initialization.",
-      "Often reflects the low-level steps of creating metadata and preparing file data."
+      "<strong>File Creation:</strong> NTFS initialized the file record segment in the MFT.",
+      "<strong>Writing Content of Resident File:</strong> File data was written as resident data inside the MFT."
     ],
-    lnk: [
-      "LNK files may be created pointing to this new file (shortcut creation for persistence or user convenience).",
-      "LNK file creation timestamp may correlate with target file creation if shortcut created immediately.",
-      "Check Desktop, Start Menu, Quick Launch for related .lnk files referencing this target."
-    ]
+    usnImage: "images/filecreate-j.png",
+    logImage: "images/filecreate-logfile.png"
   },
   {
     id: "write-modify",
@@ -30,23 +27,19 @@ const FILE_OPS = [
     useCase: "Logging, config edits, building an archive gradually",
     bestArtifacts: "$J + $LogFile, validate with $MFT",
     conclusion: "Content was written/extended; $LogFile can show write sequencing, $J shows high-level change",
+    commands: "C:\\Users\\deniz\\Desktop>echo log entry %DATE% %TIME%>>\"%USERPROFILE%\\Desktop\\deniz.bat\"\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:53:23.32",
     mft: [
-      "SI Modified time typically updates; size/allocation may change.",
-      "$DATA attribute VCN/LCN mapping changes if file grows (non-resident)."
+      "No MFT records found for this operation."
     ],
     usn: [
-      "Common reasons: DATA_EXTEND (growth), DATA_OVERWRITE (in-place change), BASIC_INFO_CHANGE.",
-      "Write bursts may produce multiple USN records."
+      "<strong>USN – DataExtend:</strong> Additional data was written to an existing file (file size increased).",
+      "<strong>USN – DataExtend | Close:</strong> Final data write completed and the file handle was closed."
     ],
     log: [
-      "Shows transactional write sequence (redo/undo style records) when metadata/data updates occur.",
-      "Useful to understand 'how' the write happened (sequence), not just that it happened."
+      "<strong>$LogFile – Updating Modified Time:</strong> NTFS updated the file's ModifiedTime from 14:52:18 to 14:53:23 due to the write operation (Update Resident Value)."
     ],
-    lnk: [
-      "LNK files pointing to this target remain valid (target path unchanged).",
-      "LNK file Accessed time may update if shortcut used to launch/access the modified file.",
-      "No LNK structure changes unless target executable path changed."
-    ]
+    usnImage: "images/filewrite-j.png",
+    logImage: "images/filewrite-logfile.png"
   },
   {
     id: "overwrite",
@@ -54,23 +47,20 @@ const FILE_OPS = [
     useCase: "\"Clean-up\" by overwriting logs/artifacts without deleting",
     bestArtifacts: "$J + $LogFile",
     conclusion: "Strong evidence of content replacement (vs just metadata change)",
+    commands: "C:\\Users\\deniz\\Desktop>echo overwritten>\"%USERPROFILE%\\Desktop\\deniz.bat\"\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:54:45.74",
     mft: [
-      "SI Modified time changes; file size may stay the same (classic overwrite) or change (overwrite+extend).",
-      "No new record necessarily—same MFT entry persists."
+      "No MFT records found for this operation."
     ],
     usn: [
-      "Often includes DATA_OVERWRITE; sometimes DATA_EXTEND depending on behavior.",
-      "If app uses temp+rename, you may see rename events instead of overwrite."
+      "<strong>DataTruncation:</strong> File size was reduced or reset (existing content cleared).",
+      "<strong>DataExtend | DataTruncation:</strong> New data was written after truncation (overwrite started).",
+      "<strong>DataExtend | DataTruncation | Close:</strong> Overwrite completed and the file handle was closed."
     ],
     log: [
-      "Strongest place (among these) to reason about in-place update steps when available.",
-      "Can help differentiate overwrite vs create+rename swap patterns."
+      "<strong>$LogFile – Updating Modified Time:</strong> NTFS updated ModifiedTime from 14:53:23 to 14:54:45 as a result of the overwrite operation (Update Resident Value)."
     ],
-    lnk: [
-      "LNK files remain valid if target file path unchanged (overwrite preserves file name/path).",
-      "LNK file Accessed time may reflect when shortcut was used to access the overwritten content.",
-      "If target is executable, LNK execution may trigger after overwrite (timeline correlation)."
-    ]
+    usnImage: "images/fileoverwrite-j.png",
+    logImage: "images/fileoverwrite-logfile.png"
   },
   {
     id: "truncate",
@@ -89,11 +79,6 @@ const FILE_OPS = [
     log: [
       "Transactional steps around size change and potential deallocation behavior."
     ],
-    lnk: [
-      "LNK files pointing to truncated file remain valid (file path/name unchanged).",
-      "If target executable truncated to 0, LNK execution may fail (check for error indicators).",
-      "LNK file Accessed time may correlate with truncation event if shortcut attempted before/after."
-    ]
   },
   {
     id: "rename",
@@ -112,12 +97,6 @@ const FILE_OPS = [
     log: [
       "Transactional rename steps (metadata updates) may be visible."
     ],
-    lnk: [
-      "LNK files with old file path become broken/unresolvable (target path mismatch).",
-      "Broken LNK files may show error indicators when accessed (useful for timeline correlation).",
-      "New LNK files may be created with new path; compare LNK creation time with rename time.",
-      "Check for LNK file modification attempts to update target path after rename."
-    ]
   },
   {
     id: "move-same-volume",
@@ -135,12 +114,6 @@ const FILE_OPS = [
     log: [
       "Transactional metadata update steps may appear."
     ],
-    lnk: [
-      "LNK files with old file path become broken/unresolvable after move (target path mismatch).",
-      "Broken LNK files show error when accessed; useful for timeline correlation with move event.",
-      "Check for LNK file creation at new location or LNK target path updates.",
-      "LNK files in Start Menu, Desktop may become invalid if target moved."
-    ]
   },
   {
     id: "copy",
@@ -159,11 +132,6 @@ const FILE_OPS = [
     log: [
       "Transaction records for destination file creation and data writes."
     ],
-    lnk: [
-      "New LNK files may be created at destination pointing to copied file.",
-      "Original LNK files at source location remain valid (source file unchanged).",
-      "Check for LNK file creation timestamps correlating with copy destination timestamp."
-    ]
   },
   {
     id: "delete",
@@ -181,12 +149,6 @@ const FILE_OPS = [
     log: [
       "Transactional steps around unlinking/metadata update may appear."
     ],
-    lnk: [
-      "LNK files pointing to deleted file become broken/unresolvable.",
-      "Broken LNK files remain on disk (Desktop, Start Menu) and show errors when accessed.",
-      "LNK file creation time helps establish timeline (target existed before deletion).",
-      "Deleted file recovery may be possible via LNK file content (contains target path)."
-    ]
   },
   {
     id: "secure-delete",
@@ -206,12 +168,6 @@ const FILE_OPS = [
       "Multiple overwrite transactions visible if $LogFile retention allows.",
       "Strongest indicator of intentional content destruction."
     ],
-    lnk: [
-      "LNK files remain valid (file path/name unchanged, only content wiped).",
-      "LNK execution attempts may fail if target executable was securely deleted.",
-      "Check LNK file Accessed timestamps for execution attempts after secure delete.",
-      "LNK file may still contain target path even if target content is destroyed."
-    ]
   },
   {
     id: "timestomp",
@@ -231,12 +187,6 @@ const FILE_OPS = [
       "$LogFile transaction timestamps show real system time of operations.",
       "Compare with $MFT to identify timestamp manipulation."
     ],
-    lnk: [
-      "LNK file timestamps may also be manipulated (timestomped) to match target file.",
-      "Compare LNK file MFT timestamps with LNK internal timestamp fields for discrepancies.",
-      "LNK execution timestamps (Prefetch, ShimCache) show real execution time (not easily manipulated).",
-      "Correlate LNK file creation time with target file timestamps to detect manipulation."
-    ]
   },
   {
     id: "metadata-only",
@@ -255,12 +205,6 @@ const FILE_OPS = [
     log: [
       "Transactional metadata updates visible if attributes/permissions changed."
     ],
-    lnk: [
-      "LNK files remain valid (target path unchanged, only attributes/permissions modified).",
-      "Hidden file attribute change doesn't affect LNK file functionality (shortcut still works).",
-      "If permissions restrict access, LNK execution may fail with access denied errors.",
-      "LNK file Accessed time may reflect execution attempts after permission changes."
-    ]
   },
   {
     id: "ads-write",
@@ -279,12 +223,6 @@ const FILE_OPS = [
     log: [
       "Transactional records for stream attribute creation and data writes."
     ],
-    lnk: [
-      "LNK files remain valid (main file path unchanged, ADS is additional stream).",
-      "LNK execution may load ADS stream if target executable contains ADS payload.",
-      "LNK file may point to ADS stream directly (rare: target.exe:stream.bin format).",
-      "ADS detection via LNK file content analysis (if target path includes stream reference)."
-    ]
   }
 ];
 
@@ -307,12 +245,6 @@ const FOLDER_OPS = [
     log: [
       "Transaction activity for directory record allocation and index updates."
     ],
-    lnk: [
-      "LNK files may be created in new folder (shortcuts to files placed in staging directory).",
-      "LNK files created in folder show creation timestamp correlating with folder creation.",
-      "Check folder for .lnk files pointing to executables dropped in staging location.",
-      "Folder path becomes part of LNK target path (e.g., C:\\staging\\tool.exe)."
-    ]
   },
   {
     id: "rename-folder",
@@ -332,12 +264,6 @@ const FOLDER_OPS = [
     log: [
       "Transactional rename steps for directory metadata updates."
     ],
-    lnk: [
-      "LNK files with target paths containing old folder name become broken/unresolvable.",
-      "LNK files need target path update or become invalid after folder rename.",
-      "Check for LNK file modification timestamps correlating with folder rename time.",
-      "Broken LNK files in Start Menu/Desktop if they reference renamed folder paths."
-    ]
   },
   {
     id: "move-folder",
@@ -357,12 +283,6 @@ const FOLDER_OPS = [
     log: [
       "Transactional steps for directory relocation and index updates."
     ],
-    lnk: [
-      "LNK files with target paths containing old folder location become broken/unresolvable.",
-      "LNK files need target path update after folder move or show errors when accessed.",
-      "Check for LNK file creation at new location or modification timestamps after move.",
-      "Broken LNK files indicate folder move timeline (LNK created before move, accessed after)."
-    ]
   },
   {
     id: "delete-folder",
@@ -382,12 +302,6 @@ const FOLDER_OPS = [
     log: [
       "Transactional steps around directory unlinking and index updates."
     ],
-    lnk: [
-      "LNK files with target paths in deleted folder become broken/unresolvable.",
-      "Broken LNK files remain on disk (Desktop, Start Menu) showing folder path in target.",
-      "LNK file creation timestamps show when target folder existed (before deletion).",
-      "LNK file content may contain full target path including deleted folder (useful for recovery/reconstruction)."
-    ]
   },
   {
     id: "permission-folder",
@@ -406,12 +320,6 @@ const FOLDER_OPS = [
     log: [
       "Transactional security descriptor updates for directory."
     ],
-    lnk: [
-      "LNK files remain valid (target paths unchanged, only folder permissions modified).",
-      "If folder permissions restrict access, LNK execution may fail with access denied errors.",
-      "LNK files in folder may become inaccessible if folder permissions prevent reading.",
-      "LNK file Accessed timestamps may reflect execution attempts affected by permission changes."
-    ]
   },
   {
     id: "hide-folder",
@@ -430,134 +338,11 @@ const FOLDER_OPS = [
     log: [
       "Transactional metadata update for attribute changes."
     ],
-    lnk: [
-      "LNK files remain valid (target paths unchanged, only folder attributes modified).",
-      "Hidden folder attribute doesn't affect LNK file functionality (shortcuts still work).",
-      "LNK files in hidden folder may be less visible but remain functional.",
-      "Folder path in LNK target remains valid even if folder is hidden."
-    ]
   }
 ];
 
-const LNK_OPS = [
-  {
-    id: "create-lnk",
-    name: "Create LNK (shortcut)",
-    useCase: "Desktop/Start Menu shortcuts for persistence, launching payloads, or hiding execution",
-    bestArtifacts: "$J + $MFT",
-    conclusion: "LNK file creation timestamp and location; target path visible in LNK file content",
-    mft: [
-      "New MFT record for .lnk file; standard file record structure.",
-      "SI timestamps set (Created/Modified/Changed).",
-      "$DATA attribute contains LNK binary format data (target path, working dir, icon, flags)."
-    ],
-    usn: [
-      "USN_REASON_FILE_CREATE for the .lnk file.",
-      "May also show BASIC_INFO_CHANGE if metadata written after creation."
-    ],
-    log: [
-      "Transaction activity for LNK file record allocation and data writes."
-    ]
-  },
-  {
-    id: "modify-lnk-target",
-    name: "Modify LNK target path",
-    useCase: "Change shortcut target to redirect to different executable (pivot attack, redirection)",
-    bestArtifacts: "$MFT + $J (LNK file content)",
-    conclusion: "Target path change in LNK file content; Modified timestamp updated; useful for tracking redirection",
-    mft: [
-      "SI Modified time updates when LNK target changed.",
-      "$DATA attribute overwritten with new LNK structure containing updated target path.",
-      "File size may change if new target path length differs."
-    ],
-    usn: [
-      "DATA_OVERWRITE or DATA_EXTEND reason (depending on size change).",
-      "BASIC_INFO_CHANGE if metadata (working dir, icon) also modified."
-    ],
-    log: [
-      "Transactional steps showing LNK file content modification (target path change)."
-    ]
-  },
-  {
-    id: "modify-lnk-metadata",
-    name: "Modify LNK metadata (icon, working dir, flags)",
-    useCase: "Change shortcut appearance or behavior (icon spoofing, working directory for relative paths)",
-    bestArtifacts: "$MFT + $J",
-    conclusion: "Metadata changes visible in LNK file; Modified timestamp reflects update",
-    mft: [
-      "SI Modified time updates.",
-      "$DATA attribute shows updated LNK flags, icon location, or working directory fields.",
-      "File size may change slightly depending on metadata size."
-    ],
-    usn: [
-      "DATA_OVERWRITE or BASIC_INFO_CHANGE reason.",
-      "May show multiple USN records if multiple fields changed."
-    ],
-    log: [
-      "Transactional metadata updates within LNK file structure."
-    ]
-  },
-  {
-    id: "delete-lnk",
-    name: "Delete LNK",
-    useCase: "Remove persistence shortcuts after execution or cleanup",
-    bestArtifacts: "$J + $MFT",
-    conclusion: "LNK file deletion timestamp; target path may still be recoverable from deleted LNK",
-    mft: [
-      "LNK file MFT record marked unused.",
-      "LNK file name attributes may persist until MFT record reused.",
-      "LNK file content (including target path) may remain on disk until overwritten."
-    ],
-    usn: [
-      "FILE_DELETE reason for the .lnk file."
-    ],
-    log: [
-      "Transactional steps for LNK file unlinking and MFT record state change."
-    ]
-  },
-  {
-    id: "lnk-timestamps",
-    name: "LNK file timestamps (Created/Modified/Accessed)",
-    useCase: "Timeline analysis for shortcut creation vs target execution; detect timestamp manipulation",
-    bestArtifacts: "$MFT SI timestamps + LNK internal timestamps",
-    conclusion: "Compare MFT timestamps with LNK internal timestamps; discrepancies may indicate manipulation",
-    mft: [
-      "SI Created time: LNK file creation on disk.",
-      "SI Modified time: Last time LNK file content changed (target/metadata update).",
-      "SI Accessed time: May reflect when shortcut was used (if tracking enabled)."
-    ],
-    usn: [
-      "$J timestamps show actual file system activity times.",
-      "Correlate with LNK internal timestamps (stored in LNK file structure)."
-    ],
-    log: [
-      "$LogFile shows real system time of LNK file operations.",
-      "Compare with LNK file's internal timestamp fields for discrepancies."
-    ]
-  },
-  {
-    id: "lnk-target-execution",
-    name: "LNK target execution (via shortcut)",
-    useCase: "Shortcut used to launch executable (persistence mechanism, user-initiated execution)",
-    bestArtifacts: "Prefetch, ShimCache, Amcache + $MFT/$J for LNK file access",
-    conclusion: "LNK file Accessed time may update; target executable execution artifacts appear; useful for persistence timeline",
-    mft: [
-      "LNK file SI Accessed time may update (depending on system configuration).",
-      "Target executable shows execution artifacts (Prefetch, $MFT timestamps, etc.).",
-      "Correlate LNK location (Desktop/Start Menu) with execution time."
-    ],
-    usn: [
-      "May show FILE_ACCESS if LNK file read tracked.",
-      "Target executable shows FILE_CREATE/EXECUTION if new process launched."
-    ],
-    log: [
-      "LNK file access transactions may appear.",
-      "Target executable launch transactions visible in $LogFile if process creation tracked."
-    ]
-  }
-];
 
-let currentType = "FILE"; // "FILE", "FOLDER", or "LNK"
+let currentType = "FILE"; // "FILE" or "FOLDER"
 let activeId = null;
 
 const elOpList = document.getElementById("opList");
@@ -568,18 +353,17 @@ const elEmpty = document.getElementById("emptyState");
 const elDetails = document.getElementById("details");
 const elTitle = document.getElementById("opTitle");
 const elUseCase = document.getElementById("opUseCase");
+const elCommands = document.getElementById("opCommands");
 
 const panels = {
   mft: document.getElementById("panel-mft"),
   usn: document.getElementById("panel-usn"),
-  log: document.getElementById("panel-log"),
-  lnk: document.getElementById("panel-lnk")
+  log: document.getElementById("panel-log")
 };
 
 function getCurrentOps() {
   if (currentType === "FILE") return FILE_OPS;
   if (currentType === "FOLDER") return FOLDER_OPS;
-  if (currentType === "LNK") return LNK_OPS;
   return FILE_OPS;
 }
 
@@ -607,14 +391,19 @@ function renderList(filter = "") {
   });
 }
 
-function listToHtml(title, arr) {
+function listToHtml(title, arr, screenshot = null, altText = "Screenshot") {
   if (!arr || arr.length === 0) return "";
-  return `
-    <h3>${title}</h3>
-    <ul>
-      ${arr.map(x => `<li>${x}</li>`).join("")}
-    </ul>
-  `;
+  
+  let html = `<h3>${title}</h3>`;
+  
+  // Add screenshot if available
+  if (screenshot) {
+    html += `<div class="screenshot-container"><img src="${screenshot}" alt="${altText}" class="screenshot" /></div>`;
+  }
+  
+  html += `<ul>${arr.map(x => `<li>${x}</li>`).join("")}</ul>`;
+  
+  return html;
 }
 
 function showDetails(id) {
@@ -635,10 +424,22 @@ function showDetails(id) {
   elTitle.textContent = op.name;
   elUseCase.textContent = op.useCase;
 
-  panels.mft.innerHTML = listToHtml("$MFT — how it typically appears", op.mft || []);
-  panels.usn.innerHTML = listToHtml("$J (USN) — common reason flags / signals", op.usn || []);
-  panels.log.innerHTML = listToHtml("$LogFile — what you may observe", op.log || []);
-  panels.lnk.innerHTML = listToHtml("LNK Files — shortcut-related artifacts", op.lnk || []);
+  // Display commands once at the top if they exist
+  if (op.commands && elCommands) {
+    const codeElement = elCommands.querySelector('code');
+    if (codeElement) {
+      // Make only the [TIME] output line bold
+      const formattedCommands = op.commands.replace(/^(\[TIME\] [^\n]+)$/gm, '<strong>$1</strong>');
+      codeElement.innerHTML = formattedCommands;
+    }
+    elCommands.style.display = 'block';
+  } else if (elCommands) {
+    elCommands.style.display = 'none';
+  }
+
+  panels.mft.innerHTML = listToHtml("$MFT", op.mft || []);
+  panels.usn.innerHTML = listToHtml("$J (USN)", op.usn || [], op.usnImage, "USN Journal Screenshot");
+  panels.log.innerHTML = listToHtml("$LogFile", op.log || [], op.logImage, "$LogFile Screenshot");
 
   // All tabs and panels start as active (multi-select)
   updatePanelVisibility();
