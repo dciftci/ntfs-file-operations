@@ -158,15 +158,19 @@ const FILE_OPS = [
     useCase: "Post-execution cleanup",
     bestArtifacts: "$J + $MFT",
     conclusion: "Delete event time (if still in $J) + $MFT record marked unused",
+    commands: "C:\\Users\\deniz\\Desktop>del \"%USERPROFILE%\\Desktop\\deniz_copy.bat\"\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 15:00:38.29",
     mft: [
       "No MFT records found for this operation."
     ],
     usn: [
-      "Common reason: FILE_DELETE (and sometimes CLOSE)."
+      "<strong>FileDelete | Close:</strong> deniz_copy.bat was deleted and the file handle was closed."
     ],
     log: [
-      "Transactional steps around unlinking/metadata update may appear."
-    ]
+      "<strong>File Deletion:</strong> NTFS processed the delete operation.",
+      "<strong>Deallocate File Record Segment:</strong> The file's record segment was deallocated."
+    ],
+    usnImage: "images/filedeletion-j.png",
+    logImage: "images/filedeletion-logfile.png"
   },
   {
     id: "secure-delete",
