@@ -236,22 +236,29 @@ const FILE_OPS = [
     usnImage: "images/filemetadata-j.png"
   },
   {
+  {
     id: "ads-write",
     name: "ADS write file",
     useCase: "Hide payload in legit.txt:evil.bin",
     bestArtifacts: "$MFT + $J (sometimes $LogFile)",
     conclusion: "Evidence of stream presence/changes; good for \"hidden content\" staging",
+    commands: "C:\\Users\\deniz\\Desktop>type C:\\Windows\\System32\\notepad.exe > \"%USERPROFILE%\\Desktop\\.cache.dat:payload.bin\"\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 15:20:43.69",
     mft: [
-      "No MFT records found for this operation."
+      "<strong>ADS present:</strong> $DATA attribute with a stream name (payload.bin) exists.",
+      "<strong>Timestamps updated:</strong> LastModified, RecordChange, and AccessTime updated at 14:20:43."
     ],
     usn: [
-      "Stream creation/write may generate USN records with stream name.",
-      "FILE_CREATE or DATA_EXTEND with stream context."
+      "<strong>StreamChange:</strong> An alternate data stream (ADS) was created or modified.",
+      "<strong>NamedDataExtend | StreamChange:</strong> Data was written to a named stream (.cache.dat:payload.bin).",
+      "<strong>NamedDataExtend | StreamChange | Close:</strong> ADS write completed and the stream handle was closed."
     ],
     log: [
-      "Transactional records for stream attribute creation and data writes."
-    ]
+      "No $LogFile records found for this operation."
+    ],
+    mftImage: "images/fileadswrite-mft.png",
+    usnImage: "images/fileadswrite-j.png"
   }
+
 ];
 
 const FOLDER_OPS = [];
