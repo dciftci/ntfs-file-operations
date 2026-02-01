@@ -68,7 +68,7 @@ const FILE_OPS = [
     useCase: "Clearing a log while keeping the file name",
     bestArtifacts: "$J + $MFT (sometimes $LogFile)",
     conclusion: "File size reduction occurred; common \"log wiped\" pattern",
-    commands: "# It zeros out the contents of the file.\nC:\\Users\\deniz\\Desktop>fsutil file setZeroData offset=0 length=999999999 \"%USERPROFILE%\\Desktop\\deniz.bat\"\nZero data is changed\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:55:51.06",
+    commands: "# It zeros out the contents of the file.\nC:\\Users\\deniz\\Desktop>fsutil file setZeroData offset=0 length=999999999 \"%USERPROFILE%\\Desktop\\deniz.bat\"\n\nC:\\Users\\deniz\\Desktop>echo [TIME] %DATE% %TIME%\n[TIME] Sat 01/31/2026 14:55:51.06",
     mft: [
       "No MFT records found for this operation."
     ],
