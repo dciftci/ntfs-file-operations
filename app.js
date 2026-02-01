@@ -207,13 +207,13 @@ const FILE_OPS = [
       "No MFT records found for this operation."
     ],
     usn: [
-      "$J timestamps reflect real activity time (not easily manipulated without admin privileges).",
-      "Correlate $J timing with $MFT to detect discrepancies."
+      "<strong>BasicInfoChange:</strong> File timestamps (LastWriteTime) were modified.",
+      "<strong>BasicInfoChange | Close:</strong> Metadata update completed and handle closed."
     ],
     log: [
-      "$LogFile transaction timestamps show real system time of operations.",
-      "Compare with $MFT to identify timestamp manipulation."
-    ]
+      "No $LogFile records found for this operation."
+    ],
+    usnImage: "images/filetimestomp-j.png"
   },
   {
     id: "metadata-only",
